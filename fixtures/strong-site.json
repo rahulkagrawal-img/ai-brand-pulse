@@ -6,13 +6,15 @@
     "purpose": "A well-implemented heritage-export ecommerce site. Most signals resolve to pass. Exercises the upper end of every dimension, full structured-data coverage, and the both-render-modes path for AID-07.",
     "expected_behaviour_notes": [
       "no dimension should be unscored; coverage should be high everywhere",
-      "signals still not_evaluated for THRESHOLD-TBD reasons: TEC-08, TEC-15, CON-06, CON-08, CON-09, AID-10 (ratio component)",
-      "PRD-10 is pass: aggregate_rating present AND reviews_visible_on_page true",
+      "PRD-10 is pass: aggregate_rating present AND reviews_visible_on_page true on the reviewed product; no violation fires",
+      "PRD-12 is partial: the saree declares a structured return policy, the scarf does not",
+      "AID-07 is evaluable: render_mode is both",
+      "Type B signals carry reviewer records, so the assessed score exceeds the deterministic score's coverage",
       "this fixture must NOT score 100 — several signals are legitimately partial, and a fixture that scores a perfect 100 tests nothing about partial handling",
-      "overall score is whatever the rubric computes; no expected number is asserted here, because asserting one before the engine exists would be inventing the answer"
-    ]
+      "no expected number is asserted here: asserting one before the engine exists would be inventing the answer"
+    ],
+    "rubric_version": "1.0.0"
   },
-
   "metadata": {
     "audit_id": "fixture-strong-site",
     "schema_version": "0.1.0",
@@ -27,18 +29,63 @@
     "source_documents": [],
     "notes": "Synthetic fixture. Not a real website and not a real audit result."
   },
-
   "site": {
     "input_url": "https://strong.example.test",
     "normalised_origin": "https://strong.example.test",
     "brand_name": "Strong Looms",
     "brand_name_source": "organization_schema",
     "segment": "export",
-    "stated_objectives": ["Be discoverable to international buyers searching for handloom silk"],
+    "stated_objectives": [
+      "Be discoverable to international buyers searching for handloom silk"
+    ],
     "platform_hint": null,
-    "key_paths": ["/", "/collections/sarees", "/products/", "/about", "/contact", "/policies/"]
+    "key_paths": [
+      "/",
+      "/collections/sarees",
+      "/products/",
+      "/about",
+      "/contact",
+      "/policies/"
+    ]
   },
-
+  "review": {
+    "CON-04": {
+      "reviewer": "fixture-operator",
+      "reviewed_at": "2026-09-12T00:00:00+00:00",
+      "method": "L-ATTR-TEXT checklist over sampled product pages",
+      "reason": "Both sampled product descriptions state material, dimensions, origin and care; the saree also states kadhwa technique."
+    },
+    "CON-07": {
+      "reviewer": "fixture-operator",
+      "reviewed_at": "2026-09-12T00:00:00+00:00",
+      "method": "L-INTENT assignment over sampled editorial and collection pages",
+      "reason": "how_to_choose, care_and_maintenance, authenticity_and_provenance and shipping_and_duties covered; sizing_and_fit and comparison not found."
+    },
+    "ENT-04": {
+      "reviewer": "fixture-operator",
+      "reviewed_at": "2026-09-12T00:00:00+00:00",
+      "method": "Homepage and About page read for the three declared components",
+      "reason": "All three stated in text on the About page."
+    },
+    "ENT-10": {
+      "reviewer": "fixture-operator",
+      "reviewed_at": "2026-09-12T00:00:00+00:00",
+      "method": "Credential claims inspected on sampled product and About pages",
+      "reason": "Silk Mark claim appears as text on the product page, not as a bare badge image. Not independently verified."
+    },
+    "AID-01": {
+      "reviewer": "fixture-operator",
+      "reviewed_at": "2026-09-12T00:00:00+00:00",
+      "method": "Opening passage of each sampled informational page",
+      "reason": "The journal article answers under question-form headings before narrating."
+    },
+    "AID-02": {
+      "reviewer": "fixture-operator",
+      "reviewed_at": "2026-09-12T00:00:00+00:00",
+      "method": "L-FACT checklist over sampled home, product and policy pages",
+      "reason": "All seven declared facts present as extractable text; none image-only."
+    }
+  },
   "crawl": {
     "sample": {
       "collected_at": "2026-09-12T00:00:00+00:00",
@@ -47,28 +94,63 @@
       "max_depth": 2,
       "selection_method": "homepage, two collections, two products, about, contact, one editorial article",
       "render_mode": "both",
-      "truncated": false
+      "truncated": false,
+      "sought": [
+        "home",
+        "collection",
+        "product",
+        "about",
+        "contact",
+        "policy",
+        "editorial",
+        "faq",
+        "robots_txt",
+        "sitemap"
+      ]
     },
     "origin": {
       "scheme": "https",
       "redirect_chain": [
-        { "from": "http://strong.example.test/", "to": "https://strong.example.test/", "status": 301 }
+        {
+          "from": "http://strong.example.test/",
+          "to": "https://strong.example.test/",
+          "status": 301
+        }
       ],
       "hsts": true,
       "tls_errors": [],
-      "host_variants": { "www.strong.example.test": 301, "strong.example.test": 200 }
+      "host_variants": {
+        "www.strong.example.test": 301,
+        "strong.example.test": 200
+      }
     },
     "robots_txt": {
       "fetched": true,
       "status_code": 200,
       "body": "User-agent: *\nDisallow: /cart\nDisallow: /account\nDisallow: /search\n\nSitemap: https://strong.example.test/sitemap.xml\n",
       "rules": [
-        { "user_agent": "*", "directive": "disallow", "path": "/cart" },
-        { "user_agent": "*", "directive": "disallow", "path": "/account" },
-        { "user_agent": "*", "directive": "disallow", "path": "/search" }
+        {
+          "user_agent": "*",
+          "directive": "disallow",
+          "path": "/cart"
+        },
+        {
+          "user_agent": "*",
+          "directive": "disallow",
+          "path": "/account"
+        },
+        {
+          "user_agent": "*",
+          "directive": "disallow",
+          "path": "/search"
+        }
       ],
-      "sitemap_directives": ["https://strong.example.test/sitemap.xml"],
-      "agent_rules": { "*": "allow" }
+      "sitemap_directives": [
+        "https://strong.example.test/sitemap.xml"
+      ],
+      "agent_rules": {
+        "*": "allow"
+      }
     },
     "sitemaps": [
       {
@@ -106,9 +188,21 @@
         "canonical_count": 1,
         "viewport_meta": "width=device-width, initial-scale=1",
         "headings": [
-          { "level": 1, "text": "Handwoven Banarasi silk, from the looms of Varanasi", "order": 0 },
-          { "level": 2, "text": "Shop by weave", "order": 1 },
-          { "level": 2, "text": "Why handloom matters", "order": 2 }
+          {
+            "level": 1,
+            "text": "Handwoven Banarasi silk, from the looms of Varanasi",
+            "order": 0
+          },
+          {
+            "level": 2,
+            "text": "Shop by weave",
+            "order": 1
+          },
+          {
+            "level": 2,
+            "text": "Why handloom matters",
+            "order": 2
+          }
         ],
         "internal_links": [
           "https://strong.example.test/collections/banarasi-sarees",
@@ -119,10 +213,26 @@
           "https://strong.example.test/policies/shipping",
           "https://strong.example.test/policies/returns"
         ],
-        "external_links": ["https://social.example.test/strongloomsofficial"],
+        "external_links": [
+          "https://social.example.test/strongloomsofficial"
+        ],
         "structured_data": [
-          { "format": "json-ld", "types": ["Organization"], "parse_ok": true, "raw": "{...}" },
-          { "format": "json-ld", "types": ["WebSite"], "parse_ok": true, "raw": "{...}" }
+          {
+            "format": "json-ld",
+            "types": [
+              "Organization"
+            ],
+            "parse_ok": true,
+            "raw": "{...}"
+          },
+          {
+            "format": "json-ld",
+            "types": [
+              "WebSite"
+            ],
+            "parse_ok": true,
+            "raw": "{...}"
+          }
         ],
         "html_bytes": 74210,
         "raw_html_text_length": 3120,
@@ -143,8 +253,16 @@
         "canonical_count": 1,
         "viewport_meta": "width=device-width, initial-scale=1",
         "headings": [
-          { "level": 1, "text": "Banarasi Silk Sarees", "order": 0 },
-          { "level": 2, "text": "Understanding the weaves", "order": 1 }
+          {
+            "level": 1,
+            "text": "Banarasi Silk Sarees",
+            "order": 0
+          },
+          {
+            "level": 2,
+            "text": "Understanding the weaves",
+            "order": 1
+          }
         ],
         "internal_links": [
           "https://strong.example.test/",
@@ -153,7 +271,14 @@
         ],
         "external_links": [],
         "structured_data": [
-          { "format": "json-ld", "types": ["BreadcrumbList"], "parse_ok": true, "raw": "{...}" }
+          {
+            "format": "json-ld",
+            "types": [
+              "BreadcrumbList"
+            ],
+            "parse_ok": true,
+            "raw": "{...}"
+          }
         ],
         "html_bytes": 61200,
         "raw_html_text_length": 1980,
@@ -173,14 +298,27 @@
         "canonical_url": "https://strong.example.test/collections/silk-scarves",
         "canonical_count": 1,
         "viewport_meta": "width=device-width, initial-scale=1",
-        "headings": [{ "level": 1, "text": "Handwoven Silk Scarves", "order": 0 }],
+        "headings": [
+          {
+            "level": 1,
+            "text": "Handwoven Silk Scarves",
+            "order": 0
+          }
+        ],
         "internal_links": [
           "https://strong.example.test/",
           "https://strong.example.test/products/handwoven-silk-scarf"
         ],
         "external_links": [],
         "structured_data": [
-          { "format": "json-ld", "types": ["BreadcrumbList"], "parse_ok": true, "raw": "{...}" }
+          {
+            "format": "json-ld",
+            "types": [
+              "BreadcrumbList"
+            ],
+            "parse_ok": true,
+            "raw": "{...}"
+          }
         ],
         "html_bytes": 52300,
         "raw_html_text_length": 860,
@@ -201,10 +339,26 @@
         "canonical_count": 1,
         "viewport_meta": "width=device-width, initial-scale=1",
         "headings": [
-          { "level": 1, "text": "Kadhwa Handwoven Banarasi Silk Saree", "order": 0 },
-          { "level": 2, "text": "Weave and materials", "order": 1 },
-          { "level": 2, "text": "Care instructions", "order": 2 },
-          { "level": 2, "text": "Shipping and returns", "order": 3 }
+          {
+            "level": 1,
+            "text": "Kadhwa Handwoven Banarasi Silk Saree",
+            "order": 0
+          },
+          {
+            "level": 2,
+            "text": "Weave and materials",
+            "order": 1
+          },
+          {
+            "level": 2,
+            "text": "Care instructions",
+            "order": 2
+          },
+          {
+            "level": 2,
+            "text": "Shipping and returns",
+            "order": 3
+          }
         ],
         "internal_links": [
           "https://strong.example.test/collections/banarasi-sarees",
@@ -214,8 +368,24 @@
         ],
         "external_links": [],
         "structured_data": [
-          { "format": "json-ld", "types": ["Product", "Offer", "AggregateRating"], "parse_ok": true, "raw": "{...}" },
-          { "format": "json-ld", "types": ["BreadcrumbList"], "parse_ok": true, "raw": "{...}" }
+          {
+            "format": "json-ld",
+            "types": [
+              "Product",
+              "Offer",
+              "AggregateRating"
+            ],
+            "parse_ok": true,
+            "raw": "{...}"
+          },
+          {
+            "format": "json-ld",
+            "types": [
+              "BreadcrumbList"
+            ],
+            "parse_ok": true,
+            "raw": "{...}"
+          }
         ],
         "html_bytes": 88400,
         "raw_html_text_length": 2640,
@@ -236,8 +406,16 @@
         "canonical_count": 1,
         "viewport_meta": "width=device-width, initial-scale=1",
         "headings": [
-          { "level": 1, "text": "Handwoven Mulberry Silk Scarf", "order": 0 },
-          { "level": 2, "text": "Materials and dimensions", "order": 1 }
+          {
+            "level": 1,
+            "text": "Handwoven Mulberry Silk Scarf",
+            "order": 0
+          },
+          {
+            "level": 2,
+            "text": "Materials and dimensions",
+            "order": 1
+          }
         ],
         "internal_links": [
           "https://strong.example.test/collections/silk-scarves",
@@ -245,8 +423,23 @@
         ],
         "external_links": [],
         "structured_data": [
-          { "format": "json-ld", "types": ["Product", "Offer"], "parse_ok": true, "raw": "{...}" },
-          { "format": "json-ld", "types": ["BreadcrumbList"], "parse_ok": true, "raw": "{...}" }
+          {
+            "format": "json-ld",
+            "types": [
+              "Product",
+              "Offer"
+            ],
+            "parse_ok": true,
+            "raw": "{...}"
+          },
+          {
+            "format": "json-ld",
+            "types": [
+              "BreadcrumbList"
+            ],
+            "parse_ok": true,
+            "raw": "{...}"
+          }
         ],
         "html_bytes": 71900,
         "raw_html_text_length": 1420,
@@ -267,13 +460,30 @@
         "canonical_count": 1,
         "viewport_meta": "width=device-width, initial-scale=1",
         "headings": [
-          { "level": 1, "text": "About Strong Looms", "order": 0 },
-          { "level": 2, "text": "Our weavers", "order": 1 }
+          {
+            "level": 1,
+            "text": "About Strong Looms",
+            "order": 0
+          },
+          {
+            "level": 2,
+            "text": "Our weavers",
+            "order": 1
+          }
         ],
-        "internal_links": ["https://strong.example.test/contact"],
+        "internal_links": [
+          "https://strong.example.test/contact"
+        ],
         "external_links": [],
         "structured_data": [
-          { "format": "json-ld", "types": ["Organization"], "parse_ok": true, "raw": "{...}" }
+          {
+            "format": "json-ld",
+            "types": [
+              "Organization"
+            ],
+            "parse_ok": true,
+            "raw": "{...}"
+          }
         ],
         "html_bytes": 44100,
         "raw_html_text_length": 1860,
@@ -293,8 +503,16 @@
         "canonical_url": "https://strong.example.test/contact",
         "canonical_count": 1,
         "viewport_meta": "width=device-width, initial-scale=1",
-        "headings": [{ "level": 1, "text": "Contact us", "order": 0 }],
-        "internal_links": ["https://strong.example.test/"],
+        "headings": [
+          {
+            "level": 1,
+            "text": "Contact us",
+            "order": 0
+          }
+        ],
+        "internal_links": [
+          "https://strong.example.test/"
+        ],
         "external_links": [],
         "structured_data": [],
         "html_bytes": 31200,
@@ -316,9 +534,21 @@
         "canonical_count": 1,
         "viewport_meta": "width=device-width, initial-scale=1",
         "headings": [
-          { "level": 1, "text": "How to identify handloom silk", "order": 0 },
-          { "level": 2, "text": "What is the quickest way to tell handloom from powerloom?", "order": 1 },
-          { "level": 2, "text": "What does a Silk Mark tag actually certify?", "order": 2 }
+          {
+            "level": 1,
+            "text": "How to identify handloom silk",
+            "order": 0
+          },
+          {
+            "level": 2,
+            "text": "What is the quickest way to tell handloom from powerloom?",
+            "order": 1
+          },
+          {
+            "level": 2,
+            "text": "What does a Silk Mark tag actually certify?",
+            "order": 2
+          }
         ],
         "internal_links": [
           "https://strong.example.test/collections/banarasi-sarees",
@@ -326,8 +556,22 @@
         ],
         "external_links": [],
         "structured_data": [
-          { "format": "json-ld", "types": ["Article"], "parse_ok": true, "raw": "{...}" },
-          { "format": "json-ld", "types": ["FAQPage"], "parse_ok": true, "raw": "{...}" }
+          {
+            "format": "json-ld",
+            "types": [
+              "Article"
+            ],
+            "parse_ok": true,
+            "raw": "{...}"
+          },
+          {
+            "format": "json-ld",
+            "types": [
+              "FAQPage"
+            ],
+            "parse_ok": true,
+            "raw": "{...}"
+          }
         ],
         "html_bytes": 58700,
         "raw_html_text_length": 4200,
@@ -336,9 +580,9 @@
       }
     ]
   },
-
-  "technical": { "evidence": {} },
-
+  "technical": {
+    "evidence": {}
+  },
   "content": {
     "evidence": {
       "collections": [
@@ -360,14 +604,25 @@
           "url": "https://strong.example.test/products/kadhwa-silk-saree",
           "description_word_count": 420,
           "description_text_present": true,
-          "attributes_in_text": ["material", "dimensions", "technique", "origin", "care"],
+          "attributes_in_text": [
+            "material",
+            "dimensions",
+            "technique",
+            "origin",
+            "care"
+          ],
           "inbound_editorial_links": 2
         },
         {
           "url": "https://strong.example.test/products/handwoven-silk-scarf",
           "description_word_count": 210,
           "description_text_present": true,
-          "attributes_in_text": ["material", "dimensions", "origin", "care"],
+          "attributes_in_text": [
+            "material",
+            "dimensions",
+            "origin",
+            "care"
+          ],
           "inbound_editorial_links": 0
         }
       ],
@@ -388,20 +643,51 @@
         ]
       },
       "intent_coverage": [
-        { "intent": "how_to_choose", "pages": ["https://strong.example.test/journal/how-to-identify-handloom-silk"] },
-        { "intent": "care_and_maintenance", "pages": ["https://strong.example.test/journal/silk-care"] },
-        { "intent": "authenticity", "pages": ["https://strong.example.test/journal/how-to-identify-handloom-silk"] },
-        { "intent": "shipping_and_duties", "pages": ["https://strong.example.test/policies/shipping"] }
+        {
+          "intent": "how_to_choose",
+          "pages": [
+            "https://strong.example.test/journal/how-to-identify-handloom-silk"
+          ]
+        },
+        {
+          "intent": "care_and_maintenance",
+          "pages": [
+            "https://strong.example.test/journal/silk-care"
+          ]
+        },
+        {
+          "intent": "authenticity",
+          "pages": [
+            "https://strong.example.test/journal/how-to-identify-handloom-silk"
+          ]
+        },
+        {
+          "intent": "shipping_and_duties",
+          "pages": [
+            "https://strong.example.test/policies/shipping"
+          ]
+        }
       ],
       "topics": [
-        { "topic": "banarasi_weaving", "page_count": 6 },
-        { "topic": "silk_care", "page_count": 3 },
-        { "topic": "export_buying", "page_count": 2 }
+        {
+          "topic": "banarasi_weaving",
+          "page_count": 6
+        },
+        {
+          "topic": "silk_care",
+          "page_count": 3
+        },
+        {
+          "topic": "export_buying",
+          "page_count": 2
+        }
       ],
-      "duplication": { "exact_duplicate_groups": [], "empty_body_pages": [] }
+      "duplication": {
+        "exact_duplicate_groups": [],
+        "empty_body_pages": []
+      }
     }
   },
-
   "entity": {
     "evidence": {
       "organization": {
@@ -409,7 +695,10 @@
         "url": "https://strong.example.test",
         "logo": "https://strong.example.test/assets/logo.png",
         "description": "A family weaving house in Varanasi producing handloom Banarasi silk since 1961.",
-        "contact_point": { "telephone": "+91-00000-00000", "contact_type": "customer service" },
+        "contact_point": {
+          "telephone": "+91-00000-00000",
+          "contact_type": "customer service"
+        },
         "address": {
           "street_address": "12 Example Ghat Road",
           "locality": "Varanasi",
@@ -422,7 +711,11 @@
           "https://directory.example.test/strong-looms"
         ]
       },
-      "about": { "url": "https://strong.example.test/about", "present": true, "word_count": 620 },
+      "about": {
+        "url": "https://strong.example.test/about",
+        "present": true,
+        "word_count": 620
+      },
       "identity": {
         "what_sold_stated": true,
         "location_stated": true,
@@ -436,9 +729,15 @@
         "contact_form": true
       },
       "consistency": {
-        "name_variants": ["Strong Looms"],
-        "address_variants": ["12 Example Ghat Road, Varanasi, Uttar Pradesh 221001"],
-        "phone_variants": ["+91-00000-00000"]
+        "name_variants": [
+          "Strong Looms"
+        ],
+        "address_variants": [
+          "12 Example Ghat Road, Varanasi, Uttar Pradesh 221001"
+        ],
+        "phone_variants": [
+          "+91-00000-00000"
+        ]
       },
       "same_as": [
         "https://social.example.test/strongloomsofficial",
@@ -447,10 +746,20 @@
       "authorship": {
         "articles_with_author": 14,
         "author_entities": [
-          { "name": "Example Author", "has_author_page": true, "has_person_schema": true }
+          {
+            "name": "Example Author",
+            "has_author_page": true,
+            "has_person_schema": true
+          }
         ]
       },
-      "policies": { "privacy": true, "terms": true, "returns": true, "shipping": true, "refunds": true },
+      "policies": {
+        "privacy": true,
+        "terms": true,
+        "returns": true,
+        "shipping": true,
+        "refunds": true
+      },
       "credentials": [
         {
           "claim_text": "Silk Mark certified",
@@ -462,7 +771,6 @@
       "logo_alt": "Strong Looms"
     }
   },
-
   "product": {
     "evidence": {
       "pages": [
@@ -471,14 +779,24 @@
           "structured_data_present": true,
           "parse_ok": true,
           "required_property_errors": [],
-          "offer": { "price": 18500, "price_currency": "INR", "availability": "InStock" },
+          "offer": {
+            "price": 18500,
+            "price_currency": "INR",
+            "availability": "InStock"
+          },
           "sku": "SL-KAD-RED-01",
           "gtin": null,
           "mpn": null,
           "brand": "Strong Looms",
           "variants": [
-            { "sku": "SL-KAD-RED-01", "colour": "Red" },
-            { "sku": "SL-KAD-GRN-01", "colour": "Green" }
+            {
+              "sku": "SL-KAD-RED-01",
+              "colour": "Red"
+            },
+            {
+              "sku": "SL-KAD-GRN-01",
+              "colour": "Green"
+            }
           ],
           "has_variant_selector": true,
           "attributes": {
@@ -492,8 +810,14 @@
           "aggregate_rating": 4.8,
           "review_count": 36,
           "reviews_visible_on_page": true,
-          "shipping_details": { "structured": true, "free_shipping_threshold": null },
-          "return_policy": { "structured": true, "return_window_days": 7 },
+          "shipping_details": {
+            "structured": true,
+            "free_shipping_threshold": null
+          },
+          "return_policy": {
+            "structured": true,
+            "return_window_days": 7
+          },
           "breadcrumb_list": true,
           "category": "Sarees > Banarasi",
           "image_urls": [
@@ -508,7 +832,11 @@
           "structured_data_present": true,
           "parse_ok": true,
           "required_property_errors": [],
-          "offer": { "price": 3200, "price_currency": "INR", "availability": "InStock" },
+          "offer": {
+            "price": 3200,
+            "price_currency": "INR",
+            "availability": "InStock"
+          },
           "sku": "SL-SCF-IND-01",
           "gtin": null,
           "mpn": null,
@@ -524,18 +852,22 @@
           "aggregate_rating": null,
           "review_count": 0,
           "reviews_visible_on_page": false,
-          "shipping_details": { "structured": true, "free_shipping_threshold": null },
+          "shipping_details": {
+            "structured": true,
+            "free_shipping_threshold": null
+          },
           "return_policy": null,
           "breadcrumb_list": true,
           "category": "Scarves",
-          "image_urls": ["https://strong.example.test/i/scarf-1.jpg"],
+          "image_urls": [
+            "https://strong.example.test/i/scarf-1.jpg"
+          ],
           "images_with_alt": 1,
           "image_in_structured_data": true
         }
       ]
     }
   },
-
   "ai_discoverability": {
     "evidence": {
       "answerability": {
@@ -546,21 +878,44 @@
         ]
       },
       "facts": {
-        "facts_in_text": ["what_sold", "materials", "origin", "price", "delivery_terms", "care"],
+        "facts_in_text": [
+          "what_sold",
+          "materials",
+          "origin",
+          "price",
+          "delivery_terms",
+          "care"
+        ],
         "facts_image_only": []
       },
       "faq": {
-        "faq_pages": ["https://strong.example.test/journal/how-to-identify-handloom-silk"],
+        "faq_pages": [
+          "https://strong.example.test/journal/how-to-identify-handloom-silk"
+        ],
         "faqpage_schema_present": true
       },
-      "entity_clarity": { "brand_statement_present": true, "category_statement_present": true },
-      "schema_types": ["Organization", "Product", "Offer", "BreadcrumbList", "FAQPage", "Article"],
+      "entity_clarity": {
+        "brand_statement_present": true,
+        "category_statement_present": true
+      },
+      "schema_types": [
+        "Organization",
+        "Product",
+        "Offer",
+        "BreadcrumbList",
+        "FAQPage",
+        "Article"
+      ],
       "relationships": {
         "breadcrumbs_present": true,
         "entity_links_present": true,
         "about_mentions_present": true
       },
-      "commercial_facts": { "price_in_text": true, "shipping_in_text": true, "returns_in_text": true },
+      "commercial_facts": {
+        "price_in_text": true,
+        "shipping_in_text": true,
+        "returns_in_text": true
+      },
       "extractability": {
         "semantic_html_ratio": 0.82,
         "tabular_data_as_tables": true,

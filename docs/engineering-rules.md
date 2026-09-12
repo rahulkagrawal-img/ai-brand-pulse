@@ -53,6 +53,15 @@ from it. A parse is a derivation, not a replacement: keep `robots_txt.body` next
 **Separate raw evidence from interpretation.** The six layers in `audit-spec.md` §1 are a structural
 requirement, not a diagram. No type may hold both an observation and a judgement about it.
 
+**Observed evidence and asserted evidence are different things.** An evidence field is *observed*
+only if it is mechanically extractable from markup, headers or response metadata. A field that a
+person or a model has to judge — "does this text state the material?", "is this page about sizing?" —
+is *asserted*, however objective its name looks. Asserted fields may only feed **Type B**
+(reviewer-assessed) signals, which are excluded from the deterministic score and carry a reviewer
+record (`scoring-rubric.md` §2). Moving a judgement upstream into the evidence layer and then calling
+the scoring layer deterministic is the specific failure this rule exists to prevent — it is what
+Rubric v0.1 did, and it made the architecture diagram untrue.
+
 **Absence is a first-class value.** `not_detected` (looked, absent) and `not_evaluated` (could not
 look) are different states and must stay different all the way to the rendered output.
 Never `null`-coalesce one into the other.
@@ -80,12 +89,18 @@ processes and time. Concretely, inside the scoring path:
 - Rounding once per defined step, round-half-away-from-zero (**not** banker's rounding, whose
   behaviour differs between languages).
 
+**Both scores are computed by the same function.** `deterministic` (Type A only) and `assessed`
+(Type A + B) are the same arithmetic over different signal sets — not two implementations
+(`scoring-rubric.md` §3). Neither may be reported without the other.
+
 **Scoring logic must be unit tested.** Every signal, every branch — including each of its
 `not_detected`, `not_applicable` and `not_evaluated` paths. A signal whose `not_evaluated` branch has
 no test is untested, whatever the coverage report says.
 
-**No LLM calls inside the core scoring calculation.** Not for classification, not for extraction, not
-for tie-breaking, not "just for topic labelling". If a signal needs a judgement a rule cannot make,
+**No LLM calls inside the core scoring calculation, and none in evidence derivation for Type A
+signals.** Not for classification, not for extraction, not for tie-breaking, not "just for topic
+labelling". A language model may never populate an evidence field a Type A signal reads, and may never
+supply a Type B signal's reviewer state. If a signal needs a judgement a rule cannot make,
 it is `not_evaluated` and a human may override it (`audit-spec.md` §7.2). CON-08 is the worked
 example: topic labelling is genuinely useful and genuinely not deterministic, so it stays unscored
 rather than being quietly outsourced.
@@ -272,6 +287,12 @@ complexity**.
 | D-7 | JSON for fixtures | Language-neutral, readable in review, parseable by any candidate implementation language | Verbose; no comments (hence `fixtures/README.md`) |
 | D-8 | Thresholds left as `THRESHOLD-TBD` | An invented threshold is fabricated measurement wearing a number | The v0.1 engine will return `not_evaluated` for several signals |
 | D-9 | No `src/` skeleton in this milestone | Empty scaffolding misrepresents project state and pre-commits to a language | Milestone 1 starts with a layout decision still open |
+| D-10 | Signal types A / B / C, with reviewer-assessed signals excluded from the deterministic score | v0.1 expressed judgement as evidence fields and then called the scoring layer deterministic | Two scores to compute, explain and test instead of one |
+| D-11 | One global aggregation algorithm for every multi-item signal | 34 of 62 v0.1 signals were implementation-dependent | Individual signals lose the ability to define bespoke aggregation |
+| D-12 | No numeric thresholds anywhere in v1 scoring | An invented threshold is fabricated measurement wearing a number | Some genuinely graded properties are scored only as present/absent |
+| D-13 | Declared lists, versioned with the rubric, replace arbitrary counts | "four or more of five" was never justified by data; the list itself is a non-arbitrary standard | List membership becomes a calibration target and a version-bump trigger |
+| D-14 | Violations evaluated before proportion in signal scoring | v0.1 had branches that could both match, making scores order-dependent | Each signal must declare its violations explicitly |
+| D-15 | `crawl.sought[]` required; an unsought target is `not_evaluated`, never `not_detected` | A sampling limitation was scoring as a site failure | Collectors and concierge operators must record what they looked for |
 
 ### Deliberately NOT decided
 
@@ -283,7 +304,9 @@ complexity**.
 | O-4 | Storage | Not needed until M5. The Build Plan names a hosted database, but that predates validation | Decide from real operational need, not from the reference architecture |
 | O-5 | `evidence_refs` path syntax | Affects every signal's output shape | JSON Pointer — standardised, unambiguous with array indices, no bespoke parser |
 | O-6 | Raw HTML retention | Real trade-off: re-derivation value vs. storage and third-party-content obligations | Retain locally during the concierge phase, outside the repository |
-| O-7 | Signal weight values | Currently judgement, not measurement | Recalibrate after the concierge batch against H2 resonance and discriminating power (`scoring-rubric.md` §10.3) |
+| O-7 | Signal weight values | Currently judgement, not measurement | Recalibrate after the concierge batch against H2 resonance and discriminating power (`scoring-rubric.md` §19) |
+| O-9 | Whether 16% reviewer-dependent weight is right | Too low understates content quality; too high weakens the determinism claim | Decide from reviewer consistency in the concierge batch (`scoring-rubric.md` SQ-6) |
+| O-10 | Whether AI Discoverability stays at 15% | Flagged, not changed — see `scoring-rubric.md` §19.3 | Decide from how much the dimension discriminates between audited sites |
 | O-8 | Crawl vs. render strategy | Blocks AID-07, which needs both modes | Defer to M2, with the security requirements in §5 as the starting specification |
 
 ### Not in scope for this repository at this milestone

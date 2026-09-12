@@ -27,7 +27,7 @@ See `docs/validation-plan.md`.
 |---|---|
 | [`docs/product-brief.md`](docs/product-brief.md) | What the product is, who it is for, what it is **not**, and the line between the current product and any future SaaS |
 | [`docs/validation-plan.md`](docs/validation-plan.md) | The six hypotheses, their thresholds, the measurement system and the decision gate |
-| [`docs/scoring-rubric.md`](docs/scoring-rubric.md) | The five dimensions, 62 signals, the six signal states and the scoring mathematics |
+| [`docs/scoring-rubric.md`](docs/scoring-rubric.md) | **v1.0** — five dimensions, 44 scored signals, the six signal states, signal types A/B/C and the scoring mathematics |
 | [`docs/audit-spec.md`](docs/audit-spec.md) | The audit record: every field, its type, whether it is required, its evidence source and its human-review policy |
 | [`docs/engineering-rules.md`](docs/engineering-rules.md) | Development rules, future security requirements, and the decision log |
 | [`fixtures/README.md`](fixtures/README.md) | The synthetic evidence fixtures and how to add more |
@@ -43,9 +43,10 @@ preserved as source material. `docs/product-brief.md` is the canonical engineeri
 ```text
 Website evidence          what the site actually exposed
        ↓
-Structured signals        deterministic interpretation — 62 rules, 6 states
+Structured signals        interpretation by rule — 44 scored signals, 6 states
        ↓
 Deterministic scoring     documented arithmetic, no LLM
+                          (two scores: deterministic, and assessed incl. human review)
        ↓
 Category scores           5 dimensions
        ↓

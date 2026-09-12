@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | `docs/audit-spec.md` (canonical) |
-| **Version** | 0.1 — Milestone 0 (Foundation) |
+| **Version** | 0.2 — aligned to Scoring Rubric v1.0 |
 | **Date** | 12 September 2026 |
 | **Status** | Conceptual data model. Specification for Milestone 1 |
 | **Companion documents** | `scoring-rubric.md` (what the signals mean), `engineering-rules.md` (how it is built), `tests/README.md` (how it is tested) |
@@ -96,6 +96,7 @@ for the life of the record. See `engineering-rules.md` §4.
 Audit
 ├── metadata              identity, versions, provenance, timing
 ├── site                  the subject of the audit as declared/normalised
+├── review                reviewer records for asserted evidence (Type B input)
 ├── crawl                 collection record: what was fetched, how, and what came back
 ├── technical             Technical SEO evidence + derived signals
 ├── content               Content & Topical Authority evidence + derived signals
@@ -190,6 +191,29 @@ one platform differently from another is measuring the platform, not the brand.
 
 ---
 
+## 5b. `review`
+
+**New in v0.2.** Reviewer records for reviewer-populated (asserted) evidence — the input to Type B
+signals (`scoring-rubric.md` §2).
+
+| Field | Type | Required | Source | Human review |
+|---|---|---|---|---|
+| `review` | object keyed by signal ID | Yes (may be empty) | Reviewer | — |
+| `review.<signal_id>.reviewer` | string | Yes | Reviewer | No |
+| `review.<signal_id>.reviewed_at` | timestamp | Yes | Reviewer | No |
+| `review.<signal_id>.method` | string | Yes | Rubric review method | No |
+| `review.<signal_id>.reason` | string | Yes | Reviewer | Yes |
+
+**Purpose.** A Type B signal is `not_evaluated` unless this object carries a record for it. An empty
+`review` object is valid and means no reviewer assessment was performed — which is the normal state in
+`mode = automated`, and produces a deterministic score only.
+
+The record is keyed by signal ID rather than by evidence field because one reviewer judgement
+(a checklist pass over `L-FACT`, say) populates several evidence fields at once, and the audit needs
+to know who made that judgement, when, and by what method.
+
+---
+
 ## 6. `crawl`
 
 The collection record. This is the audit's evidentiary base and its honesty depends on it being
@@ -206,9 +230,18 @@ complete about its own limits.
 | `selection_method` | string | Yes | Collector | Yes |
 | `render_mode` | enum: `raw_html` · `rendered` · `both` | Yes | Collector | No |
 | `truncated` | boolean | Yes | Collector | No |
+| `sought` | array of enum | **Yes** | Collector / operator | Yes |
+
 
 **Purpose.** Every rendering of the audit states the sample. Without it, a score over 25 pages reads
 as a verdict on 4,000 products. `render_mode` gates AID-07 entirely.
+
+`sought` is **new in v0.2** and is what makes `not_detected` honest. It is the machine-readable list
+of page types and artefacts the collection actually attempted — drawn from the same enum as
+`page_type`, plus `robots_txt`, `sitemap` and `faq`. A signal whose target is absent from `sought`
+returns `not_evaluated`, never `not_detected` (`scoring-rubric.md` §4.4). Without this field a
+sampling limitation scores as a site failure, which is the exact class of false claim the product
+exists to avoid.
 
 ### 6.2 `crawl.origin`
 
@@ -294,8 +327,8 @@ evidence path referenced by a signal in `scoring-rubric.md` §5–9 lives here o
 |---|---|
 | Type | Object; shape defined per dimension by the evidence schema (Milestone 1) |
 | Required | Yes — may be empty, but the key must exist |
-| Source | Extraction from `crawl`, or operator entry when `metadata.mode = concierge` |
-| Human review | **Yes.** In concierge mode a human may enter evidence directly, provided `collection_method` on the field records that they did |
+| Source | Extraction from `crawl` (observed), or reviewer entry (asserted) |
+| Human review | **Yes** for asserted fields. An *observed* field is mechanically extractable from markup, headers or response metadata; an *asserted* field requires human judgement. Asserted fields may only feed Type B signals, and require a matching entry in `review` (§5b). See `engineering-rules.md` §2 |
 
 Illustrative — `product.evidence` (see `fixtures/` for the full worked shape):
 
@@ -329,6 +362,7 @@ One record per signal defined for that dimension in the rubric.
 | Field | Type | Required | Source | Human review |
 |---|---|---|---|---|
 | `id` | string (e.g. `PRD-03`) | Yes | Rubric | No |
+| `type` | enum: `A` · `B` · `C` | Yes | Rubric | No |
 | `state` | enum: `pass` · `partial` · `fail` · `not_detected` · `not_applicable` · `not_evaluated` | Yes | Derivation | **Yes — override permitted** |
 | `value` | number \| null | Yes | Derived from `state` | No |
 | `weight` | integer | Yes | Rubric | No |
@@ -337,7 +371,17 @@ One record per signal defined for that dimension in the rubric.
 | `overridden` | boolean | Yes | Review | — |
 | `original_state` | enum \| null | Conditional — required when `overridden = true` | Review | No |
 | `override_reason` | string \| null | Conditional — required when `overridden = true` | Reviewer | Yes |
-| `reviewer` | string \| null | Conditional — required when `overridden = true` | Review | No |
+| `reviewer` | string \| null | Conditional — required when `overridden = true` **or** `type = B` and state ≠ `not_evaluated` | Review | No |
+| `reviewed_at` | timestamp \| null | Conditional — required when `type = B` and state ≠ `not_evaluated` | Review | No |
+| `review_method` | string \| null | Conditional — required when `type = B` and state ≠ `not_evaluated` | Rubric | No |
+| `items_applicable` | integer \| null | Conditional — required for multi-item signals | Derivation | No |
+| `items_evaluated` | integer \| null | Conditional — required for multi-item signals | Derivation | No |
+
+**Type B (reviewer-assessed) signals** carry `reviewer`, `reviewed_at`, `review_method` and `reason`
+whenever they hold a state other than `not_evaluated`. A Type B signal with no reviewer record **is**
+`not_evaluated` — it is never inferred, never defaulted to zero, and never populated by a language
+model. Supplying a reviewer state on a Type B signal is a *review*, not an override; only changing an
+already-recorded state sets `overridden = true` (`scoring-rubric.md` §14.4).
 
 **`evidence_refs` is required and must be non-empty for any signal whose state is not
 `not_evaluated`.** A signal that cannot say which evidence produced it is unauditable, and an
@@ -358,16 +402,26 @@ Pure function of `<dimension>.signals[]` and the rubric. Nothing else may write 
 |---|---|---|---|---|
 | `rubric_version` | string | Yes | Constant | **No** |
 | `dimensions` | object keyed by dimension code | Yes | Computed | **No** |
-| `dimensions.<d>.score` | number (0.0–100.0) \| null | Yes | Computed | **No** |
+| `dimensions.<d>.score` | object `{deterministic, assessed}` | Yes | Computed | **No** |
+| `dimensions.<d>.reviewer_dependent_share` | number (0.0–1.0) | Yes | Computed | No |
+| `dimensions.<d>.unevaluated_weight_share` | number (0.0–1.0) | Yes | Computed | No |
 | `dimensions.<d>.weight` | number | Yes | Rubric | No |
 | `dimensions.<d>.effective_weight` | number | Yes | After redistribution | No |
 | `dimensions.<d>.coverage` | number (0.0–1.0) | Yes | Computed | No |
 | `dimensions.<d>.confidence` | enum: `high` · `medium` · `low` · `unscored` | Yes | Computed | No |
 | `dimensions.<d>.signal_counts` | object: state → count | Yes | Computed | No |
-| `overall` | number (0.0–100.0) \| null | Yes | Computed | **No** |
-| `overall_display` | integer \| null | Yes | `round_half_up(overall, 0)` | No |
+| `overall` | object `{deterministic, assessed}` | Yes | Computed | **No** |
+| `overall.deterministic` | number (0.0–100.0) \| null | Yes | Computed over Type A only | **No** |
+| `overall.assessed` | number (0.0–100.0) \| null | Yes | Computed over Type A + Type B | **No** |
+| `reviewer_dependent_share` | number (0.0–1.0) | Yes | Computed | No |
+| `catalogue_detected` | boolean | Yes | From PRD-00 | No |
+| `overall_display` | integer \| null | Yes | `round_half_up` of the headline score (§3 of the rubric) | No |
 | `unscored_dimensions` | array of dimension codes | Yes (may be empty) | Computed | No |
 | `issuable` | boolean | Yes | `false` when ≥ 2 dimensions unscored | No |
+
+**Two scores, always.** `deterministic` is computed over Type A signals only; `assessed` includes
+Type B. Neither may be reported alone, and every rendering states the reviewer-dependent share
+(`scoring-rubric.md` §3). In `mode = automated` only the deterministic score exists.
 
 **Scores are never human-editable.** A reviewer who disagrees with a score changes a **signal state**
 — with a recorded override — and the score recomputes. This is the single rule that keeps the number
@@ -426,11 +480,18 @@ assembled mechanically so it cannot be quietly dropped when it is inconvenient.
 | `sample_statement` | string | Yes | Generated from `crawl.sample` | No |
 | `unscored_dimensions` | array of `{dimension, reason}` | Yes (may be empty) | From `scores` | No |
 | `not_evaluated_signals` | array of `{signal_id, reason}` | Yes (may be empty) | From signals | No |
+| `reviewer_assessed_signals` | array of `{signal_id, reviewer, method}` | Yes (may be empty) | From Type B signals | No |
+| `not_sought` | array of strings | Yes (may be empty) | From `crawl.sample.sought` | No |
 | `not_detected_statement` | string | Yes | Constant wording | No |
 | `no_ranking_claim_statement` | string | Yes | **Constant, mandatory** | No |
 | `no_verification_statement` | string | Yes | **Constant, mandatory** | No |
 | `collection_caveats` | array of strings | Yes (may be empty) | Collector + operator | Yes |
 | `rubric_version_statement` | string | Yes | From `metadata` | No |
+
+One further statement is **mandatory and conditional**: when `scores.catalogue_detected` is false on a
+site audited as ecommerce, the audit carries the critical catalogue finding required by
+`scoring-rubric.md` §4.5, adjacent to the score. `not_applicable` must never become a way to hide a
+weakness.
 
 Three statements are **mandatory and constant** in every audit of every kind:
 

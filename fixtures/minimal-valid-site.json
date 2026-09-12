@@ -5,16 +5,18 @@
     "not_a_real_website": true,
     "purpose": "The smallest structurally valid evidence record. A one-page brochure site with no catalogue. Exercises the not_applicable and not_evaluated paths, dimension exclusion, weight redistribution and low-coverage confidence reporting.",
     "expected_behaviour_notes": [
-      "product dimension must be UNSCORED: no product pages in the sample, so all PRD-* are not_applicable",
+      "product dimension must be UNSCORED: no product pages in the sample, so all scored PRD-* are not_applicable",
+      "PRD-00 (catalogue detected) must be false, firing the mandatory critical catalogue finding (rubric 4.5) — the weakness must NOT disappear with the dimension",
       "its 20% weight redistributes across the remaining four dimensions",
       "TEC-11 is not_evaluated: fewer than 3 pages sampled",
-      "TEC-08, TEC-15, CON-06, CON-08, CON-09, AID-10 are not_evaluated: THRESHOLD-TBD",
       "AID-07 is not_evaluated: render_mode is raw_html only",
+      "crawl.sought lists only 'home', so every signal targeting an unsought artefact (sitemap, about, contact, policy, faq, editorial, robots_txt) must be not_evaluated, NOT not_detected (rubric 4.4)",
+      "all six Type B signals are not_evaluated: no reviewer record, so deterministic and assessed scores must be equal",
       "coverage should land in the low/medium band for content and entity",
       "scores.issuable must still be true: only one dimension is unscored"
-    ]
+    ],
+    "rubric_version": "1.0.0"
   },
-
   "metadata": {
     "audit_id": "fixture-minimal-valid-site",
     "schema_version": "0.1.0",
@@ -29,7 +31,6 @@
     "source_documents": [],
     "notes": "Synthetic fixture. Not a real website and not a real audit result."
   },
-
   "site": {
     "input_url": "https://minimal.example.test",
     "normalised_origin": "https://minimal.example.test",
@@ -38,9 +39,11 @@
     "segment": "not_stated",
     "stated_objectives": [],
     "platform_hint": null,
-    "key_paths": ["/"]
+    "key_paths": [
+      "/"
+    ]
   },
-
+  "review": {},
   "crawl": {
     "sample": {
       "collected_at": "2026-09-12T00:00:00+00:00",
@@ -49,7 +52,10 @@
       "max_depth": 0,
       "selection_method": "homepage only",
       "render_mode": "raw_html",
-      "truncated": false
+      "truncated": false,
+      "sought": [
+        "home"
+      ]
     },
     "origin": {
       "scheme": "https",
@@ -82,7 +88,11 @@
         "canonical_count": 0,
         "viewport_meta": "width=device-width, initial-scale=1",
         "headings": [
-          { "level": 1, "text": "Minimal Brand", "order": 0 }
+          {
+            "level": 1,
+            "text": "Minimal Brand",
+            "order": 0
+          }
         ],
         "internal_links": [],
         "external_links": [],
@@ -94,24 +104,35 @@
       }
     ]
   },
-
-  "technical": { "evidence": {} },
-
+  "technical": {
+    "evidence": {}
+  },
   "content": {
     "evidence": {
       "collections": [],
       "products": [],
-      "editorial": { "hub_present": false, "hub_url": null, "article_count": 0, "articles": [] },
+      "editorial": {
+        "hub_present": false,
+        "hub_url": null,
+        "article_count": 0,
+        "articles": []
+      },
       "intent_coverage": [],
       "topics": [],
-      "duplication": { "exact_duplicate_groups": [], "empty_body_pages": [] }
+      "duplication": {
+        "exact_duplicate_groups": [],
+        "empty_body_pages": []
+      }
     }
   },
-
   "entity": {
     "evidence": {
       "organization": null,
-      "about": { "url": null, "present": false, "word_count": 0 },
+      "about": {
+        "url": null,
+        "present": false,
+        "word_count": 0
+      },
       "identity": {
         "what_sold_stated": false,
         "location_stated": false,
@@ -124,30 +145,63 @@
         "postal_address": null,
         "contact_form": false
       },
-      "consistency": { "name_variants": ["Minimal Brand"], "address_variants": [], "phone_variants": [] },
+      "consistency": {
+        "name_variants": [
+          "Minimal Brand"
+        ],
+        "address_variants": [],
+        "phone_variants": []
+      },
       "same_as": [],
-      "authorship": { "articles_with_author": 0, "author_entities": [] },
-      "policies": { "privacy": false, "terms": false, "returns": false, "shipping": false, "refunds": false },
+      "authorship": {
+        "articles_with_author": 0,
+        "author_entities": []
+      },
+      "policies": {
+        "privacy": false,
+        "terms": false,
+        "returns": false,
+        "shipping": false,
+        "refunds": false
+      },
       "credentials": [],
       "logo_alt": null
     }
   },
-
-  "product": { "evidence": { "pages": [] } },
-
+  "product": {
+    "evidence": {
+      "pages": []
+    }
+  },
   "ai_discoverability": {
     "evidence": {
-      "answerability": { "pages_with_lead_answer": 0, "question_headings": [] },
-      "facts": { "facts_in_text": [], "facts_image_only": [] },
-      "faq": { "faq_pages": [], "faqpage_schema_present": false },
-      "entity_clarity": { "brand_statement_present": true, "category_statement_present": false },
+      "answerability": {
+        "pages_with_lead_answer": 0,
+        "question_headings": []
+      },
+      "facts": {
+        "facts_in_text": [],
+        "facts_image_only": []
+      },
+      "faq": {
+        "faq_pages": [],
+        "faqpage_schema_present": false
+      },
+      "entity_clarity": {
+        "brand_statement_present": true,
+        "category_statement_present": false
+      },
       "schema_types": [],
       "relationships": {
         "breadcrumbs_present": false,
         "entity_links_present": false,
         "about_mentions_present": false
       },
-      "commercial_facts": { "price_in_text": false, "shipping_in_text": false, "returns_in_text": false },
+      "commercial_facts": {
+        "price_in_text": false,
+        "shipping_in_text": false,
+        "returns_in_text": false
+      },
       "extractability": {
         "semantic_html_ratio": null,
         "tabular_data_as_tables": null,

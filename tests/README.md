@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Version** | 0.1 — Milestone 0 |
-| **Status** | Strategy only. **No tests exist yet, because no code exists yet** |
+| **Status** | Strategy only. **No tests exist yet, because no code exists yet**. Aligned to Scoring Rubric v1.0 |
 | **Governs** | `docs/engineering-rules.md` §6 |
 
 ---
@@ -49,6 +49,16 @@ fix the architecture, not the test.
 
 ## 3. Test layers
 
+### Layer 0 — The global aggregation rule
+
+Test the algorithm in `scoring-rubric.md` §6.2 **once, in isolation**, before any signal uses it:
+`A = 0` → `not_applicable`; `E = 0` → `not_evaluated`; a violation with `S = E` → `fail` (violations
+beat proportion); `S = E` → `pass`; `0 < S < E` → `partial`; `S = 0` → the declared zero state, for
+both `not_detected` and `fail` variants; `0 < E < A` → scored with `items_evaluated` recorded.
+
+Because every multi-item signal delegates to it, a bug here is a bug in 34 signals at once — and a
+test here is worth 34 signal tests.
+
 ### Layer 1 — Signal derivation tests (the bulk of the work)
 
 One test module per signal. For each signal, cover **every reachable state**, including the ones easy
@@ -61,7 +71,7 @@ to forget:
 | `fail` | Yes, where the rubric defines it |
 | `not_detected` | **Yes** — evidence present, target absent |
 | `not_applicable` | **Yes** — the applicability rule fires |
-| `not_evaluated` | **Yes** — evidence missing, or `THRESHOLD-TBD` |
+| `not_evaluated` | **Yes** — evidence missing, target absent from `crawl.sought[]`, or Type B with no reviewer |
 | `evidence_refs` | **Non-empty for every state except `not_evaluated`** |
 
 A signal with an untested `not_evaluated` branch is untested, whatever a coverage percentage says —
@@ -78,6 +88,18 @@ These are arithmetic tests over synthetic signal sets — no fixtures needed.
 
 Must cover: all-pass · all-fail · mixed · weight redistribution when signals are excluded · every
 coverage band boundary (0.80, 0.50, 0.01, 0) · a dimension with zero applicable signals (unscored).
+
+### Layer 2b — Signal type tests
+
+Assert the Type A / B / C contract (`scoring-rubric.md` §2–3):
+
+- A **Type B** signal with no reviewer record is `not_evaluated` — never zero, never guessed.
+- A Type B signal is **absent from the deterministic score's denominator** and present in the
+  assessed score's.
+- A **Type C** signal contributes zero weight and appears in no denominator.
+- `reviewer`, `reviewed_at` and `review_method` are present on every Type B signal holding a state
+  other than `not_evaluated`.
+- The deterministic and assessed scores are equal when every Type B signal is `not_evaluated`.
 
 ### Layer 3 — Overall score tests
 
@@ -110,6 +132,12 @@ Properties that must hold for **every** input:
    running with those faculties stubbed to throw.
 8. **Injection inertness.** Evidence strings containing instruction-like text produce exactly the
    same scores as benign strings of the same shape.
+9. **No threshold constants.** No numeric literal other than the state values {0, 0.5, 1.0}, integer
+   weights and the coverage band boundaries appears in any signal rule — v1 has no scoring thresholds
+   (`scoring-rubric.md` header), and a stray constant means one crept back in.
+10. **Sought-gating.** For every signal whose target is a discoverable artefact, removing that target
+    from `crawl.sought[]` turns `not_detected` into `not_evaluated` and *raises or holds* the
+    dimension score — it must never lower it.
 
 ---
 
@@ -161,9 +189,10 @@ The scoring engine is complete when:
 
 1. Every non-`THRESHOLD-TBD` signal in the rubric has a derivation implementation and tests for all
    its reachable states.
-2. Every `THRESHOLD-TBD` signal returns `not_evaluated` and has a test asserting exactly that.
+2. Every Type B signal returns `not_evaluated` without a reviewer record, and has a test asserting
+   exactly that. Every Type C signal is proven to contribute zero weight.
 3. All three fixtures score end-to-end with committed, hand-derived expectations.
-4. All eight invariants in §3 Layer 5 hold.
-5. Every audit record the engine emits can answer the six auditability questions in
-   `docs/scoring-rubric.md` §12.
+4. All ten invariants in §3 Layer 5 hold.
+5. Every audit record the engine emits can answer the seven auditability questions in
+   `docs/scoring-rubric.md` §14.6.
 6. The whole suite runs offline, without an LLM, a database or a login.

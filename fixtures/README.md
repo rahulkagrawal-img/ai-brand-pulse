@@ -4,9 +4,9 @@ Synthetic evidence records used to develop and test the deterministic scoring en
 
 | | |
 |---|---|
-| **Version** | 0.1 — Milestone 0 |
+| **Version** | 0.2 — aligned to Scoring Rubric v1.0 |
 | **Schema** | `docs/audit-spec.md` |
-| **Rubric** | `docs/scoring-rubric.md` |
+| **Rubric** | `docs/scoring-rubric.md` v1.0 |
 
 ---
 
@@ -27,7 +27,7 @@ be asserting the answer the engine is supposed to compute.
 - **Not scraped data.** Hand-written to exercise specific rule branches.
 - **Not real-world audit results.** They are not representative of any actual brand, and no number
   derived from them may be quoted as an observation about anything.
-- **Not exhaustive.** Three files cannot cover 62 signals. They are a starting corpus.
+- **Not exhaustive.** Three files cannot cover 44 scored signals. They are a starting corpus.
 
 ---
 
@@ -38,6 +38,13 @@ be asserting the answer the engine is supposed to compute.
 | `minimal-valid-site.json` | A one-page brochure site with no catalogue | Structural minimum · `not_applicable` · dimension exclusion · weight redistribution · low coverage · single-page edge cases |
 | `strong-site.json` | A well-implemented heritage-export ecommerce site | `pass` paths across all five dimensions · full structured-data coverage · both render modes (AID-07) · high coverage |
 | `weak-site.json` | A commercially active but machine-illegible site | `fail` and `not_detected` paths · conflicting canonicals · `noindex` on a commercial page · unparseable structured data · review markup without visible reviews · facts trapped in images |
+
+### The `review` block
+
+Each file carries a top-level `review` object (`audit-spec.md` §5b) holding reviewer records for
+reviewer-populated evidence. `strong-site` and `weak-site` carry records for all six Type B signals;
+`minimal-valid-site` carries none, so its Type B signals must resolve to `not_evaluated` and its
+deterministic and assessed scores must be equal. That contrast is the point of having it empty.
 
 ### The `fixture` block
 
@@ -86,6 +93,9 @@ Not yet written; each targets branches the three current files do not reach:
 - A site with legitimate cross-domain canonicals (TEC-06 `fail` requiring human override)
 - A multi-currency / multi-locale site (PRD-04 partial, locale limitation)
 - A site with two or more unscored dimensions (`scores.issuable = false`)
+- A site where `crawl.sought[]` omits a target that the site does in fact have, proving
+  `not_evaluated` is returned rather than `not_detected` (rubric §4.4)
+- A site with reviewer records on only some Type B signals, exercising a partial assessed score
 - A site whose product text contains prompt-injection strings, to prove the scoring path is
   unaffected and that the string never reaches an instruction position
   (`docs/engineering-rules.md` §4)

@@ -5,18 +5,20 @@
     "not_a_real_website": true,
     "purpose": "A commercially active but machine-illegible ecommerce site: real products, real trade, almost nothing a machine can read. Exercises the fail and not_detected paths across every dimension, plus the two states that must never be confused with each other.",
     "expected_behaviour_notes": [
-      "TEC-05 must be fail: a sampled product page carries noindex",
-      "TEC-06 must be fail: every page canonicalises to the homepage",
-      "TEC-12 must be partial: structured data present but one block does not parse",
-      "PRD-03 must be not_detected even though prices are visible in text — the signal measures machine-readability, and the finding must say exactly that",
-      "PRD-10 must be fail, not pass: aggregate_rating is present while reviews_visible_on_page is false (review markup without visible reviews is a risk, per the rubric)",
-      "AID-02 must be partial at best: materials, origin and care exist only in images",
-      "AID-07 must be fail: raw HTML carries almost no body text",
-      "AID-08 records a factual block of AI agents; it may only reach fail because site.stated_objectives names AI visibility",
+      "TEC-05 must be fail: a sampled product page carries noindex (violation condition)",
+      "TEC-06 must be fail: every page canonicalises to the origin root — a declared violation, which under rubric 6.2 step 3 beats the pass branch it also satisfies",
+      "TEC-07 must be fail: all five pages share the identical title 'Home' (total-duplication violation), NOT partial as in v0.1",
+      "TEC-12 must be partial: structured data present, one block parses and one does not",
+      "PRD-03 must be not_detected even though prices are visible in text — the signal measures machine-readability, and price_visible_in_text exists only so the finding says so",
+      "PRD-10 must be fail: aggregate_rating present while reviews_visible_on_page is false (violation)",
+      "AID-08 must be fail: ExampleAIBot is disallowed AND site.stated_objectives names AI visibility — weight 3 in v1, not 1",
+      "AID-07 must be fail: raw HTML carries almost no body text on any page",
+      "TEC-02 must still be pass: only User-agent '*' is in scope. The AI-agent block is AID-08's to score — v1 no longer leaves it at weight 1",
+      "all six Type B signals are not_evaluated: no reviewer record supplied",
       "nothing here justifies rendering not_detected as 'this brand has no returns policy' — it has one, in an image"
-    ]
+    ],
+    "rubric_version": "1.0.0"
   },
-
   "metadata": {
     "audit_id": "fixture-weak-site",
     "schema_version": "0.1.0",
@@ -31,18 +33,60 @@
     "source_documents": [],
     "notes": "Synthetic fixture. Not a real website and not a real audit result."
   },
-
   "site": {
     "input_url": "https://weak.example.test",
     "normalised_origin": "https://weak.example.test",
     "brand_name": "Weak Weaves",
     "brand_name_source": "title",
     "segment": "heritage",
-    "stated_objectives": ["Be found by AI shopping assistants and answer engines"],
+    "stated_objectives": [
+      "Be found by AI shopping assistants and answer engines"
+    ],
     "platform_hint": null,
-    "key_paths": ["/", "/shop", "/products/"]
+    "key_paths": [
+      "/",
+      "/shop",
+      "/products/"
+    ]
   },
-
+  "review": {
+    "CON-04": {
+      "reviewer": "fixture-operator",
+      "reviewed_at": "2026-09-12T00:00:00+00:00",
+      "method": "L-ATTR-TEXT checklist over sampled product pages",
+      "reason": "No attribute category stated in text; material, dimensions, origin and care appear only in the details-table image."
+    },
+    "CON-07": {
+      "reviewer": "fixture-operator",
+      "reviewed_at": "2026-09-12T00:00:00+00:00",
+      "method": "L-INTENT assignment over sampled pages",
+      "reason": "No sampled page addresses any declared buyer intent; the site has no editorial content."
+    },
+    "ENT-04": {
+      "reviewer": "fixture-operator",
+      "reviewed_at": "2026-09-12T00:00:00+00:00",
+      "method": "Homepage read; no About page in the sample",
+      "reason": "Trading name stated; what is sold and location are not stated in text."
+    },
+    "ENT-10": {
+      "reviewer": "fixture-operator",
+      "reviewed_at": "2026-09-12T00:00:00+00:00",
+      "method": "Credential claims inspected on sampled product pages",
+      "reason": "A Handloom Mark badge image is present with no accompanying text. Not independently verified."
+    },
+    "AID-01": {
+      "reviewer": "fixture-operator",
+      "reviewed_at": "2026-09-12T00:00:00+00:00",
+      "method": "n/a — no informational pages in the sample",
+      "reason": "CON-05 not_detected, so no population exists."
+    },
+    "AID-02": {
+      "reviewer": "fixture-operator",
+      "reviewed_at": "2026-09-12T00:00:00+00:00",
+      "method": "L-FACT checklist over sampled home, product and policy pages",
+      "reason": "Only what_sold is in text; materials, origin, care, dimensions and returns terms are image-only; price is in text."
+    }
+  },
   "crawl": {
     "sample": {
       "collected_at": "2026-09-12T00:00:00+00:00",
@@ -51,25 +95,49 @@
       "max_depth": 2,
       "selection_method": "homepage, shop listing, two products, one policy page",
       "render_mode": "both",
-      "truncated": false
+      "truncated": false,
+      "sought": [
+        "home",
+        "collection",
+        "product",
+        "policy",
+        "robots_txt",
+        "sitemap",
+        "about",
+        "contact"
+      ]
     },
     "origin": {
       "scheme": "https",
       "redirect_chain": [],
       "hsts": null,
       "tls_errors": [],
-      "host_variants": { "www.weak.example.test": 200, "weak.example.test": 200 }
+      "host_variants": {
+        "www.weak.example.test": 200,
+        "weak.example.test": 200
+      }
     },
     "robots_txt": {
       "fetched": true,
       "status_code": 200,
       "body": "User-agent: *\nDisallow:\n\nUser-agent: ExampleAIBot\nDisallow: /\n",
       "rules": [
-        { "user_agent": "*", "directive": "disallow", "path": "" },
-        { "user_agent": "ExampleAIBot", "directive": "disallow", "path": "/" }
+        {
+          "user_agent": "*",
+          "directive": "disallow",
+          "path": ""
+        },
+        {
+          "user_agent": "ExampleAIBot",
+          "directive": "disallow",
+          "path": "/"
+        }
       ],
       "sitemap_directives": [],
-      "agent_rules": { "*": "allow", "ExampleAIBot": "disallow" }
+      "agent_rules": {
+        "*": "allow",
+        "ExampleAIBot": "disallow"
+      }
     },
     "sitemaps": [],
     "pages": [
@@ -87,10 +155,20 @@
         "canonical_count": 1,
         "viewport_meta": "width=device-width, initial-scale=1",
         "headings": [
-          { "level": 1, "text": "Weak Weaves", "order": 0 },
-          { "level": 1, "text": "New Arrivals", "order": 1 }
+          {
+            "level": 1,
+            "text": "Weak Weaves",
+            "order": 0
+          },
+          {
+            "level": 1,
+            "text": "New Arrivals",
+            "order": 1
+          }
         ],
-        "internal_links": ["https://weak.example.test/shop"],
+        "internal_links": [
+          "https://weak.example.test/shop"
+        ],
         "external_links": [],
         "structured_data": [],
         "html_bytes": 18400,
@@ -137,10 +215,19 @@
         "canonical_count": 1,
         "viewport_meta": null,
         "headings": [],
-        "internal_links": ["https://weak.example.test/shop"],
+        "internal_links": [
+          "https://weak.example.test/shop"
+        ],
         "external_links": [],
         "structured_data": [
-          { "format": "json-ld", "types": ["Product"], "parse_ok": false, "raw": "{ broken json" }
+          {
+            "format": "json-ld",
+            "types": [
+              "Product"
+            ],
+            "parse_ok": false,
+            "raw": "{ broken json"
+          }
         ],
         "html_bytes": 26800,
         "raw_html_text_length": 38,
@@ -161,10 +248,20 @@
         "canonical_count": 1,
         "viewport_meta": null,
         "headings": [],
-        "internal_links": ["https://weak.example.test/shop"],
+        "internal_links": [
+          "https://weak.example.test/shop"
+        ],
         "external_links": [],
         "structured_data": [
-          { "format": "json-ld", "types": ["Product", "AggregateRating"], "parse_ok": true, "raw": "{...}" }
+          {
+            "format": "json-ld",
+            "types": [
+              "Product",
+              "AggregateRating"
+            ],
+            "parse_ok": true,
+            "raw": "{...}"
+          }
         ],
         "html_bytes": 25900,
         "raw_html_text_length": 38,
@@ -195,9 +292,9 @@
       }
     ]
   },
-
-  "technical": { "evidence": {} },
-
+  "technical": {
+    "evidence": {}
+  },
   "content": {
     "evidence": {
       "collections": [
@@ -224,7 +321,12 @@
           "inbound_editorial_links": 0
         }
       ],
-      "editorial": { "hub_present": false, "hub_url": null, "article_count": 0, "articles": [] },
+      "editorial": {
+        "hub_present": false,
+        "hub_url": null,
+        "article_count": 0,
+        "articles": []
+      },
       "intent_coverage": [],
       "topics": [],
       "duplication": {
@@ -234,15 +336,20 @@
             "https://weak.example.test/products/silk-saree-2"
           ]
         ],
-        "empty_body_pages": ["https://weak.example.test/policy"]
+        "empty_body_pages": [
+          "https://weak.example.test/policy"
+        ]
       }
     }
   },
-
   "entity": {
     "evidence": {
       "organization": null,
-      "about": { "url": null, "present": false, "word_count": 0 },
+      "about": {
+        "url": null,
+        "present": false,
+        "word_count": 0
+      },
       "identity": {
         "what_sold_stated": false,
         "location_stated": false,
@@ -256,13 +363,26 @@
         "contact_form": true
       },
       "consistency": {
-        "name_variants": ["Weak Weaves", "WeakWeaves Exports", "Weak Weaves Pvt Ltd"],
+        "name_variants": [
+          "Weak Weaves",
+          "WeakWeaves Exports",
+          "Weak Weaves Pvt Ltd"
+        ],
         "address_variants": [],
         "phone_variants": []
       },
       "same_as": [],
-      "authorship": { "articles_with_author": 0, "author_entities": [] },
-      "policies": { "privacy": false, "terms": false, "returns": true, "shipping": false, "refunds": false },
+      "authorship": {
+        "articles_with_author": 0,
+        "author_entities": []
+      },
+      "policies": {
+        "privacy": false,
+        "terms": false,
+        "returns": true,
+        "shipping": false,
+        "refunds": false
+      },
       "credentials": [
         {
           "claim_text": "Handloom Mark",
@@ -274,7 +394,6 @@
       "logo_alt": null
     }
   },
-
   "product": {
     "evidence": {
       "pages": [
@@ -282,8 +401,14 @@
           "url": "https://weak.example.test/products/silk-saree-1",
           "structured_data_present": true,
           "parse_ok": false,
-          "required_property_errors": ["unparseable json-ld block"],
-          "offer": { "price": null, "price_currency": null, "availability": null },
+          "required_property_errors": [
+            "unparseable json-ld block"
+          ],
+          "offer": {
+            "price": null,
+            "price_currency": null,
+            "availability": null
+          },
           "sku": null,
           "gtin": null,
           "mpn": null,
@@ -312,7 +437,11 @@
           "structured_data_present": true,
           "parse_ok": true,
           "required_property_errors": [],
-          "offer": { "price": null, "price_currency": null, "availability": null },
+          "offer": {
+            "price": null,
+            "price_currency": null,
+            "availability": null
+          },
           "sku": null,
           "gtin": null,
           "mpn": null,
@@ -327,7 +456,9 @@
           "return_policy": null,
           "breadcrumb_list": false,
           "category": null,
-          "image_urls": ["https://weak.example.test/i/3.jpg"],
+          "image_urls": [
+            "https://weak.example.test/i/3.jpg"
+          ],
           "images_with_alt": 0,
           "image_in_structured_data": false,
           "price_visible_in_text": true
@@ -335,23 +466,45 @@
       ]
     }
   },
-
   "ai_discoverability": {
     "evidence": {
-      "answerability": { "pages_with_lead_answer": 0, "question_headings": [] },
-      "facts": {
-        "facts_in_text": ["what_sold"],
-        "facts_image_only": ["materials", "origin", "care", "dimensions", "returns_terms"]
+      "answerability": {
+        "pages_with_lead_answer": 0,
+        "question_headings": []
       },
-      "faq": { "faq_pages": [], "faqpage_schema_present": false },
-      "entity_clarity": { "brand_statement_present": false, "category_statement_present": false },
-      "schema_types": ["Product"],
+      "facts": {
+        "facts_in_text": [
+          "what_sold"
+        ],
+        "facts_image_only": [
+          "materials",
+          "origin",
+          "care",
+          "dimensions",
+          "returns_terms"
+        ]
+      },
+      "faq": {
+        "faq_pages": [],
+        "faqpage_schema_present": false
+      },
+      "entity_clarity": {
+        "brand_statement_present": false,
+        "category_statement_present": false
+      },
+      "schema_types": [
+        "Product"
+      ],
       "relationships": {
         "breadcrumbs_present": false,
         "entity_links_present": false,
         "about_mentions_present": false
       },
-      "commercial_facts": { "price_in_text": true, "shipping_in_text": false, "returns_in_text": false },
+      "commercial_facts": {
+        "price_in_text": true,
+        "shipping_in_text": false,
+        "returns_in_text": false
+      },
       "extractability": {
         "semantic_html_ratio": 0.11,
         "tabular_data_as_tables": false,
