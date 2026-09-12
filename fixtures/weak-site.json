@@ -22,7 +22,7 @@
   "metadata": {
     "audit_id": "fixture-weak-site",
     "schema_version": "0.1.0",
-    "rubric_version": "0.1.0",
+    "rubric_version": "1.0.0",
     "engine_version": "fixture",
     "created_at": "2026-09-12T00:00:00+00:00",
     "as_of": "2026-09-12T00:00:00+00:00",
@@ -174,7 +174,12 @@
         "html_bytes": 18400,
         "raw_html_text_length": 40,
         "rendered_text_length": 1120,
-        "body_text_hash": "fixture-weak-home"
+        "body_text_hash": "fixture-weak-home",
+        "raw_html_contains": {
+          "h1_text": false,
+          "body_text": false,
+          "primary_commercial_fact": false
+        }
       },
       {
         "url": "https://weak.example.test/shop",
@@ -199,7 +204,12 @@
         "html_bytes": 22100,
         "raw_html_text_length": 35,
         "rendered_text_length": 640,
-        "body_text_hash": "fixture-weak-shop"
+        "body_text_hash": "fixture-weak-shop",
+        "raw_html_contains": {
+          "h1_text": false,
+          "body_text": false,
+          "primary_commercial_fact": false
+        }
       },
       {
         "url": "https://weak.example.test/products/silk-saree-1",
@@ -232,7 +242,12 @@
         "html_bytes": 26800,
         "raw_html_text_length": 38,
         "rendered_text_length": 420,
-        "body_text_hash": "fixture-weak-prod-1"
+        "body_text_hash": "fixture-weak-prod-1",
+        "raw_html_contains": {
+          "h1_text": false,
+          "body_text": false,
+          "primary_commercial_fact": false
+        }
       },
       {
         "url": "https://weak.example.test/products/silk-saree-2",
@@ -266,7 +281,12 @@
         "html_bytes": 25900,
         "raw_html_text_length": 38,
         "rendered_text_length": 410,
-        "body_text_hash": "fixture-weak-prod-2"
+        "body_text_hash": "fixture-weak-prod-2",
+        "raw_html_contains": {
+          "h1_text": false,
+          "body_text": false,
+          "primary_commercial_fact": false
+        }
       },
       {
         "url": "https://weak.example.test/policy",
@@ -288,7 +308,12 @@
         "html_bytes": 15200,
         "raw_html_text_length": 30,
         "rendered_text_length": 90,
-        "body_text_hash": "fixture-weak-policy"
+        "body_text_hash": "fixture-weak-policy",
+        "raw_html_contains": {
+          "h1_text": false,
+          "body_text": false,
+          "primary_commercial_fact": false
+        }
       }
     ]
   },
@@ -302,7 +327,8 @@
           "url": "https://weak.example.test/shop",
           "word_count": 0,
           "has_intro_text": false,
-          "in_primary_navigation": true
+          "in_primary_navigation": true,
+          "body_text_present": false
         }
       ],
       "products": [
@@ -338,7 +364,8 @@
         ],
         "empty_body_pages": [
           "https://weak.example.test/policy"
-        ]
+        ],
+        "templated_page_urls": []
       }
     }
   },
@@ -353,7 +380,7 @@
       "identity": {
         "what_sold_stated": false,
         "location_stated": false,
-        "legal_or_trading_name_stated": true
+        "trading_name_stated": true
       },
       "contact": {
         "page_present": false,
@@ -372,6 +399,7 @@
         "phone_variants": []
       },
       "same_as": [],
+      "social_links_in_markup": [],
       "authorship": {
         "articles_with_author": 0,
         "author_entities": []
@@ -430,7 +458,8 @@
           ],
           "images_with_alt": 0,
           "image_in_structured_data": false,
-          "price_visible_in_text": true
+          "price_visible_in_text": true,
+          "name_present": false
         },
         {
           "url": "https://weak.example.test/products/silk-saree-2",
@@ -461,7 +490,8 @@
           ],
           "images_with_alt": 0,
           "image_in_structured_data": false,
-          "price_visible_in_text": true
+          "price_visible_in_text": true,
+          "name_present": true
         }
       ]
     }
@@ -480,7 +510,6 @@
           "materials",
           "origin",
           "care",
-          "dimensions",
           "returns_terms"
         ]
       },

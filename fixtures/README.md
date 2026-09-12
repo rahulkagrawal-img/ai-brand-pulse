@@ -39,6 +39,19 @@ be asserting the answer the engine is supposed to compute.
 | `strong-site.json` | A well-implemented heritage-export ecommerce site | `pass` paths across all five dimensions · full structured-data coverage · both render modes (AID-07) · high coverage |
 | `weak-site.json` | A commercially active but machine-illegible site | `fail` and `not_detected` paths · conflicting canonicals · `noindex` on a commercial page · unparseable structured data · review markup without visible reviews · facts trapped in images |
 
+### Validation
+
+Fixtures are validated against the evidence schema (`src/schema/evidence.ts`), which is the single
+source of truth — TypeScript types are inferred from it, so types and validation rules cannot drift.
+
+```
+npm run validate:fixtures
+```
+
+The schema uses strict objects, so an undocumented key fails loudly rather than being ignored, and it
+distinguishes a **`null` value** ("known to be absent") from a **missing key** ("not collected"), because
+the `not_detected` / `not_evaluated` split depends on that difference (`audit-spec.md` §3).
+
 ### The `review` block
 
 Each file carries a top-level `review` object (`audit-spec.md` §5b) holding reviewer records for
@@ -70,6 +83,30 @@ answer and then building something that reproduces it. Expected values are deriv
 See `tests/README.md` §4.
 
 ---
+
+## Alignment to Rubric v1.0
+
+The three fixtures were first written against Rubric v0.1 and carried its vocabulary. Bringing them
+onto the v1 evidence model was a set of meaning-preserving renames plus fields that v1 signals read
+and v0.1 did not have:
+
+| Change | Signal | Derived from |
+|---|---|---|
+| `legal_or_trading_name_stated` → `trading_name_stated` | ENT-04 | Field name in the locked rubric; value unchanged |
+| intent `authenticity` → `authenticity_and_provenance` | CON-07 | `L-INTENT` member name |
+| attribute keys `dimensions` → `size_or_dimensions`, `technique` → `pattern_or_technique` | PRD-09 | `L-ATTR-STRUCT` member names; values unchanged |
+| `facts_image_only` dropped `dimensions` | AID-02 | Not a member of `L-FACT`, so AID-02 cannot score it |
+| `collections[].body_text_present` added | CON-02 | Existing `has_intro_text` and `word_count` |
+| `products[].name_present` added | PRD-01 | Existing `structured_data_present` / `parse_ok` |
+| `products[].price_visible_in_text` added to `strong-site` | PRD-03 | Already true in `weak-site`; corroborated by `commercial_facts.price_in_text` |
+| `duplication.templated_page_urls` added | CON-12 | Empty — no paginated variants in any sample |
+| `entity.social_links_in_markup` added | ENT-07 | Existing `crawl.pages[].external_links` |
+| `crawl.pages[].raw_html_contains` added | AID-07 | Existing `raw_html_text_length` vs `rendered_text_length` |
+| `metadata.rubric_version` `0.1.0` → `1.0.0` | — | The fixture blocks already declared v1; metadata had not been updated |
+
+`minimal-valid-site` deliberately **omits** `raw_html_contains`: its `render_mode` is `raw_html` only, so
+the field was never collected. That exercises the "missing key → `not_evaluated`" path, which is the
+distinction the whole state model rests on.
 
 ## Adding a fixture
 

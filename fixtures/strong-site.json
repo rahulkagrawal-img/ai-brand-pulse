@@ -18,7 +18,7 @@
   "metadata": {
     "audit_id": "fixture-strong-site",
     "schema_version": "0.1.0",
-    "rubric_version": "0.1.0",
+    "rubric_version": "1.0.0",
     "engine_version": "fixture",
     "created_at": "2026-09-12T00:00:00+00:00",
     "as_of": "2026-09-12T00:00:00+00:00",
@@ -237,7 +237,12 @@
         "html_bytes": 74210,
         "raw_html_text_length": 3120,
         "rendered_text_length": 3240,
-        "body_text_hash": "fixture-strong-home"
+        "body_text_hash": "fixture-strong-home",
+        "raw_html_contains": {
+          "h1_text": true,
+          "body_text": true,
+          "primary_commercial_fact": true
+        }
       },
       {
         "url": "https://strong.example.test/collections/banarasi-sarees",
@@ -283,7 +288,12 @@
         "html_bytes": 61200,
         "raw_html_text_length": 1980,
         "rendered_text_length": 2010,
-        "body_text_hash": "fixture-strong-coll-1"
+        "body_text_hash": "fixture-strong-coll-1",
+        "raw_html_contains": {
+          "h1_text": true,
+          "body_text": true,
+          "primary_commercial_fact": true
+        }
       },
       {
         "url": "https://strong.example.test/collections/silk-scarves",
@@ -323,7 +333,12 @@
         "html_bytes": 52300,
         "raw_html_text_length": 860,
         "rendered_text_length": 870,
-        "body_text_hash": "fixture-strong-coll-2"
+        "body_text_hash": "fixture-strong-coll-2",
+        "raw_html_contains": {
+          "h1_text": true,
+          "body_text": true,
+          "primary_commercial_fact": true
+        }
       },
       {
         "url": "https://strong.example.test/products/kadhwa-silk-saree",
@@ -390,7 +405,12 @@
         "html_bytes": 88400,
         "raw_html_text_length": 2640,
         "rendered_text_length": 2700,
-        "body_text_hash": "fixture-strong-prod-1"
+        "body_text_hash": "fixture-strong-prod-1",
+        "raw_html_contains": {
+          "h1_text": true,
+          "body_text": true,
+          "primary_commercial_fact": true
+        }
       },
       {
         "url": "https://strong.example.test/products/handwoven-silk-scarf",
@@ -444,7 +464,12 @@
         "html_bytes": 71900,
         "raw_html_text_length": 1420,
         "rendered_text_length": 1450,
-        "body_text_hash": "fixture-strong-prod-2"
+        "body_text_hash": "fixture-strong-prod-2",
+        "raw_html_contains": {
+          "h1_text": true,
+          "body_text": true,
+          "primary_commercial_fact": true
+        }
       },
       {
         "url": "https://strong.example.test/about",
@@ -488,7 +513,12 @@
         "html_bytes": 44100,
         "raw_html_text_length": 1860,
         "rendered_text_length": 1880,
-        "body_text_hash": "fixture-strong-about"
+        "body_text_hash": "fixture-strong-about",
+        "raw_html_contains": {
+          "h1_text": true,
+          "body_text": true,
+          "primary_commercial_fact": true
+        }
       },
       {
         "url": "https://strong.example.test/contact",
@@ -518,7 +548,12 @@
         "html_bytes": 31200,
         "raw_html_text_length": 540,
         "rendered_text_length": 550,
-        "body_text_hash": "fixture-strong-contact"
+        "body_text_hash": "fixture-strong-contact",
+        "raw_html_contains": {
+          "h1_text": true,
+          "body_text": true,
+          "primary_commercial_fact": true
+        }
       },
       {
         "url": "https://strong.example.test/journal/how-to-identify-handloom-silk",
@@ -576,7 +611,12 @@
         "html_bytes": 58700,
         "raw_html_text_length": 4200,
         "rendered_text_length": 4220,
-        "body_text_hash": "fixture-strong-journal-1"
+        "body_text_hash": "fixture-strong-journal-1",
+        "raw_html_contains": {
+          "h1_text": true,
+          "body_text": true,
+          "primary_commercial_fact": true
+        }
       }
     ]
   },
@@ -590,13 +630,15 @@
           "url": "https://strong.example.test/collections/banarasi-sarees",
           "word_count": 310,
           "has_intro_text": true,
-          "in_primary_navigation": true
+          "in_primary_navigation": true,
+          "body_text_present": true
         },
         {
           "url": "https://strong.example.test/collections/silk-scarves",
           "word_count": 120,
           "has_intro_text": true,
-          "in_primary_navigation": true
+          "in_primary_navigation": true,
+          "body_text_present": true
         }
       ],
       "products": [
@@ -656,7 +698,7 @@
           ]
         },
         {
-          "intent": "authenticity",
+          "intent": "authenticity_and_provenance",
           "pages": [
             "https://strong.example.test/journal/how-to-identify-handloom-silk"
           ]
@@ -684,7 +726,8 @@
       ],
       "duplication": {
         "exact_duplicate_groups": [],
-        "empty_body_pages": []
+        "empty_body_pages": [],
+        "templated_page_urls": []
       }
     }
   },
@@ -719,7 +762,7 @@
       "identity": {
         "what_sold_stated": true,
         "location_stated": true,
-        "legal_or_trading_name_stated": true
+        "trading_name_stated": true
       },
       "contact": {
         "page_present": true,
@@ -742,6 +785,9 @@
       "same_as": [
         "https://social.example.test/strongloomsofficial",
         "https://directory.example.test/strong-looms"
+      ],
+      "social_links_in_markup": [
+        "https://social.example.test/strongloomsofficial"
       ],
       "authorship": {
         "articles_with_author": 14,
@@ -802,9 +848,9 @@
           "attributes": {
             "material": "Pure mulberry silk",
             "colour": "Red",
-            "dimensions": "6.3m x 1.15m",
+            "size_or_dimensions": "6.3m x 1.15m",
             "weight": "780g",
-            "technique": "Kadhwa handloom",
+            "pattern_or_technique": "Kadhwa handloom",
             "origin": "Varanasi, India"
           },
           "aggregate_rating": 4.8,
@@ -825,7 +871,9 @@
             "https://strong.example.test/i/kadhwa-2.jpg"
           ],
           "images_with_alt": 2,
-          "image_in_structured_data": true
+          "image_in_structured_data": true,
+          "name_present": true,
+          "price_visible_in_text": true
         },
         {
           "url": "https://strong.example.test/products/handwoven-silk-scarf",
@@ -846,7 +894,7 @@
           "attributes": {
             "material": "Mulberry silk",
             "colour": "Indigo",
-            "dimensions": "2.0m x 0.7m",
+            "size_or_dimensions": "2.0m x 0.7m",
             "origin": "Varanasi, India"
           },
           "aggregate_rating": null,
@@ -863,7 +911,9 @@
             "https://strong.example.test/i/scarf-1.jpg"
           ],
           "images_with_alt": 1,
-          "image_in_structured_data": true
+          "image_in_structured_data": true,
+          "name_present": true,
+          "price_visible_in_text": true
         }
       ]
     }

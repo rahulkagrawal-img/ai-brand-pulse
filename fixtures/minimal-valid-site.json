@@ -20,7 +20,7 @@
   "metadata": {
     "audit_id": "fixture-minimal-valid-site",
     "schema_version": "0.1.0",
-    "rubric_version": "0.1.0",
+    "rubric_version": "1.0.0",
     "engine_version": "fixture",
     "created_at": "2026-09-12T00:00:00+00:00",
     "as_of": "2026-09-12T00:00:00+00:00",
@@ -121,7 +121,8 @@
       "topics": [],
       "duplication": {
         "exact_duplicate_groups": [],
-        "empty_body_pages": []
+        "empty_body_pages": [],
+        "templated_page_urls": []
       }
     }
   },
@@ -136,7 +137,7 @@
       "identity": {
         "what_sold_stated": false,
         "location_stated": false,
-        "legal_or_trading_name_stated": true
+        "trading_name_stated": true
       },
       "contact": {
         "page_present": false,
@@ -153,6 +154,7 @@
         "phone_variants": []
       },
       "same_as": [],
+      "social_links_in_markup": [],
       "authorship": {
         "articles_with_author": 0,
         "author_entities": []
