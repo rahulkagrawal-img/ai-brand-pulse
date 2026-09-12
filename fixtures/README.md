@@ -1,0 +1,91 @@
+# Fixtures
+
+Synthetic evidence records used to develop and test the deterministic scoring engine.
+
+| | |
+|---|---|
+| **Version** | 0.1 — Milestone 0 |
+| **Schema** | `docs/audit-spec.md` |
+| **Rubric** | `docs/scoring-rubric.md` |
+
+---
+
+## What these are
+
+Each file is a **scoring-engine input**: an evidence record in the shape defined by
+`docs/audit-spec.md`, containing `metadata`, `site`, `crawl`, and the `evidence` block of each of the
+five dimensions.
+
+They contain **no signals and no scores**. Those are *outputs*. A fixture that carried a score would
+be asserting the answer the engine is supposed to compute.
+
+## What these are NOT
+
+- **Not real websites.** Every domain is under `example.test` (reserved by RFC 6761 and guaranteed
+  never to resolve). Every brand name is invented. No real prospect, customer or competitor site
+  appears here.
+- **Not scraped data.** Hand-written to exercise specific rule branches.
+- **Not real-world audit results.** They are not representative of any actual brand, and no number
+  derived from them may be quoted as an observation about anything.
+- **Not exhaustive.** Three files cannot cover 62 signals. They are a starting corpus.
+
+---
+
+## The files
+
+| File | Represents | Exercises |
+|---|---|---|
+| `minimal-valid-site.json` | A one-page brochure site with no catalogue | Structural minimum · `not_applicable` · dimension exclusion · weight redistribution · low coverage · single-page edge cases |
+| `strong-site.json` | A well-implemented heritage-export ecommerce site | `pass` paths across all five dimensions · full structured-data coverage · both render modes (AID-07) · high coverage |
+| `weak-site.json` | A commercially active but machine-illegible site | `fail` and `not_detected` paths · conflicting canonicals · `noindex` on a commercial page · unparseable structured data · review markup without visible reviews · facts trapped in images |
+
+### The `fixture` block
+
+Each file carries a top-level `fixture` object that is **not part of the audit schema**. It records
+the fixture's purpose and the behaviours it is meant to exercise. A loader strips it before passing
+the record to the engine; a schema validator should reject it in a real audit record.
+
+`expected_behaviour_notes` are prose intent, **not assertions**. Real assertions live in tests.
+
+---
+
+## Why no expected scores are committed yet
+
+Writing `"expected_overall": 74.5` into a fixture before the engine exists would be inventing the
+answer and then building something that reproduces it. Expected values are derived in two steps:
+
+1. Assert **signal states** first. Those follow directly from the rubric and can be reasoned about by
+   hand, one signal at a time.
+2. Assert **scores** only once the signal states are agreed. At that point the score is arithmetic,
+   and the expected value can be computed by hand from §3 of the rubric and committed as a
+   regression baseline.
+
+See `tests/README.md` §4.
+
+---
+
+## Adding a fixture
+
+1. Give it a name that says what it represents, not what it scores.
+2. Use `example.test` domains and invented brand names. **Never** a real site, and never real
+   prospect data (`docs/engineering-rules.md` §8).
+3. Keep it minimal — include only the evidence the target branches need. A large fixture that
+   exercises one branch makes failures hard to read.
+4. State in `fixture.purpose` which rule branches it exists to reach.
+5. Prefer several small, focused fixtures over one large realistic one. Realism is not the goal;
+   branch coverage is.
+6. Keep `metadata.as_of` fixed. A fixture whose expected output changes with the calendar is broken
+   (`docs/engineering-rules.md` §3).
+
+### Fixtures still needed
+
+Not yet written; each targets branches the three current files do not reach:
+
+- A site whose `robots.txt` blocks product paths (TEC-02 `fail`)
+- A site with editorial content but no products (CON-* scored, all PRD-* `not_applicable`)
+- A site with legitimate cross-domain canonicals (TEC-06 `fail` requiring human override)
+- A multi-currency / multi-locale site (PRD-04 partial, locale limitation)
+- A site with two or more unscored dimensions (`scores.issuable = false`)
+- A site whose product text contains prompt-injection strings, to prove the scoring path is
+  unaffected and that the string never reaches an instruction position
+  (`docs/engineering-rules.md` §4)

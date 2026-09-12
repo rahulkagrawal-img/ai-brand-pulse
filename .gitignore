@@ -1,0 +1,37 @@
+# Secrets and local configuration — never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+
+# Prospect, customer and audit data — see docs/engineering-rules.md §8
+/private/
+/local/
+*-prospects.csv
+*-prospects.xlsx
+/audits/
+
+# Retained third-party page content
+/crawl-cache/
+/raw-html/
+
+# OS and editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Common runtime/build artefacts (pre-emptive; language not yet chosen)
+node_modules/
+dist/
+build/
+coverage/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/

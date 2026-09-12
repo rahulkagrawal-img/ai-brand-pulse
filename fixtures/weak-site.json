@@ -1,0 +1,362 @@
+{
+  "fixture": {
+    "name": "weak-site",
+    "synthetic": true,
+    "not_a_real_website": true,
+    "purpose": "A commercially active but machine-illegible ecommerce site: real products, real trade, almost nothing a machine can read. Exercises the fail and not_detected paths across every dimension, plus the two states that must never be confused with each other.",
+    "expected_behaviour_notes": [
+      "TEC-05 must be fail: a sampled product page carries noindex",
+      "TEC-06 must be fail: every page canonicalises to the homepage",
+      "TEC-12 must be partial: structured data present but one block does not parse",
+      "PRD-03 must be not_detected even though prices are visible in text — the signal measures machine-readability, and the finding must say exactly that",
+      "PRD-10 must be fail, not pass: aggregate_rating is present while reviews_visible_on_page is false (review markup without visible reviews is a risk, per the rubric)",
+      "AID-02 must be partial at best: materials, origin and care exist only in images",
+      "AID-07 must be fail: raw HTML carries almost no body text",
+      "AID-08 records a factual block of AI agents; it may only reach fail because site.stated_objectives names AI visibility",
+      "nothing here justifies rendering not_detected as 'this brand has no returns policy' — it has one, in an image"
+    ]
+  },
+
+  "metadata": {
+    "audit_id": "fixture-weak-site",
+    "schema_version": "0.1.0",
+    "rubric_version": "0.1.0",
+    "engine_version": "fixture",
+    "created_at": "2026-09-12T00:00:00+00:00",
+    "as_of": "2026-09-12T00:00:00+00:00",
+    "mode": "concierge",
+    "operator": "fixture",
+    "audit_type": "free_audit",
+    "locale": "en-IN",
+    "source_documents": [],
+    "notes": "Synthetic fixture. Not a real website and not a real audit result."
+  },
+
+  "site": {
+    "input_url": "https://weak.example.test",
+    "normalised_origin": "https://weak.example.test",
+    "brand_name": "Weak Weaves",
+    "brand_name_source": "title",
+    "segment": "heritage",
+    "stated_objectives": ["Be found by AI shopping assistants and answer engines"],
+    "platform_hint": null,
+    "key_paths": ["/", "/shop", "/products/"]
+  },
+
+  "crawl": {
+    "sample": {
+      "collected_at": "2026-09-12T00:00:00+00:00",
+      "method": "assisted",
+      "page_count": 5,
+      "max_depth": 2,
+      "selection_method": "homepage, shop listing, two products, one policy page",
+      "render_mode": "both",
+      "truncated": false
+    },
+    "origin": {
+      "scheme": "https",
+      "redirect_chain": [],
+      "hsts": null,
+      "tls_errors": [],
+      "host_variants": { "www.weak.example.test": 200, "weak.example.test": 200 }
+    },
+    "robots_txt": {
+      "fetched": true,
+      "status_code": 200,
+      "body": "User-agent: *\nDisallow:\n\nUser-agent: ExampleAIBot\nDisallow: /\n",
+      "rules": [
+        { "user_agent": "*", "directive": "disallow", "path": "" },
+        { "user_agent": "ExampleAIBot", "directive": "disallow", "path": "/" }
+      ],
+      "sitemap_directives": [],
+      "agent_rules": { "*": "allow", "ExampleAIBot": "disallow" }
+    },
+    "sitemaps": [],
+    "pages": [
+      {
+        "url": "https://weak.example.test/",
+        "final_url": "https://weak.example.test/",
+        "status_code": 200,
+        "page_type": "home",
+        "depth_from_home": 0,
+        "title": "Home",
+        "meta_description": null,
+        "meta_robots": null,
+        "x_robots_tag": null,
+        "canonical_url": "https://weak.example.test/",
+        "canonical_count": 1,
+        "viewport_meta": "width=device-width, initial-scale=1",
+        "headings": [
+          { "level": 1, "text": "Weak Weaves", "order": 0 },
+          { "level": 1, "text": "New Arrivals", "order": 1 }
+        ],
+        "internal_links": ["https://weak.example.test/shop"],
+        "external_links": [],
+        "structured_data": [],
+        "html_bytes": 18400,
+        "raw_html_text_length": 40,
+        "rendered_text_length": 1120,
+        "body_text_hash": "fixture-weak-home"
+      },
+      {
+        "url": "https://weak.example.test/shop",
+        "final_url": "https://weak.example.test/shop",
+        "status_code": 200,
+        "page_type": "collection",
+        "depth_from_home": 1,
+        "title": "Home",
+        "meta_description": null,
+        "meta_robots": null,
+        "x_robots_tag": null,
+        "canonical_url": "https://weak.example.test/",
+        "canonical_count": 1,
+        "viewport_meta": "width=device-width, initial-scale=1",
+        "headings": [],
+        "internal_links": [
+          "https://weak.example.test/products/silk-saree-1",
+          "https://weak.example.test/products/silk-saree-2"
+        ],
+        "external_links": [],
+        "structured_data": [],
+        "html_bytes": 22100,
+        "raw_html_text_length": 35,
+        "rendered_text_length": 640,
+        "body_text_hash": "fixture-weak-shop"
+      },
+      {
+        "url": "https://weak.example.test/products/silk-saree-1",
+        "final_url": "https://weak.example.test/products/silk-saree-1",
+        "status_code": 200,
+        "page_type": "product",
+        "depth_from_home": 2,
+        "title": "Home",
+        "meta_description": null,
+        "meta_robots": null,
+        "x_robots_tag": null,
+        "canonical_url": "https://weak.example.test/",
+        "canonical_count": 1,
+        "viewport_meta": null,
+        "headings": [],
+        "internal_links": ["https://weak.example.test/shop"],
+        "external_links": [],
+        "structured_data": [
+          { "format": "json-ld", "types": ["Product"], "parse_ok": false, "raw": "{ broken json" }
+        ],
+        "html_bytes": 26800,
+        "raw_html_text_length": 38,
+        "rendered_text_length": 420,
+        "body_text_hash": "fixture-weak-prod-1"
+      },
+      {
+        "url": "https://weak.example.test/products/silk-saree-2",
+        "final_url": "https://weak.example.test/products/silk-saree-2",
+        "status_code": 200,
+        "page_type": "product",
+        "depth_from_home": 2,
+        "title": "Home",
+        "meta_description": null,
+        "meta_robots": "noindex, follow",
+        "x_robots_tag": null,
+        "canonical_url": "https://weak.example.test/",
+        "canonical_count": 1,
+        "viewport_meta": null,
+        "headings": [],
+        "internal_links": ["https://weak.example.test/shop"],
+        "external_links": [],
+        "structured_data": [
+          { "format": "json-ld", "types": ["Product", "AggregateRating"], "parse_ok": true, "raw": "{...}" }
+        ],
+        "html_bytes": 25900,
+        "raw_html_text_length": 38,
+        "rendered_text_length": 410,
+        "body_text_hash": "fixture-weak-prod-2"
+      },
+      {
+        "url": "https://weak.example.test/policy",
+        "final_url": "https://weak.example.test/policy",
+        "status_code": 200,
+        "page_type": "policy",
+        "depth_from_home": 2,
+        "title": "Home",
+        "meta_description": null,
+        "meta_robots": null,
+        "x_robots_tag": null,
+        "canonical_url": "https://weak.example.test/",
+        "canonical_count": 1,
+        "viewport_meta": null,
+        "headings": [],
+        "internal_links": [],
+        "external_links": [],
+        "structured_data": [],
+        "html_bytes": 15200,
+        "raw_html_text_length": 30,
+        "rendered_text_length": 90,
+        "body_text_hash": "fixture-weak-policy"
+      }
+    ]
+  },
+
+  "technical": { "evidence": {} },
+
+  "content": {
+    "evidence": {
+      "collections": [
+        {
+          "url": "https://weak.example.test/shop",
+          "word_count": 0,
+          "has_intro_text": false,
+          "in_primary_navigation": true
+        }
+      ],
+      "products": [
+        {
+          "url": "https://weak.example.test/products/silk-saree-1",
+          "description_word_count": 8,
+          "description_text_present": true,
+          "attributes_in_text": [],
+          "inbound_editorial_links": 0
+        },
+        {
+          "url": "https://weak.example.test/products/silk-saree-2",
+          "description_word_count": 0,
+          "description_text_present": false,
+          "attributes_in_text": [],
+          "inbound_editorial_links": 0
+        }
+      ],
+      "editorial": { "hub_present": false, "hub_url": null, "article_count": 0, "articles": [] },
+      "intent_coverage": [],
+      "topics": [],
+      "duplication": {
+        "exact_duplicate_groups": [
+          [
+            "https://weak.example.test/products/silk-saree-1",
+            "https://weak.example.test/products/silk-saree-2"
+          ]
+        ],
+        "empty_body_pages": ["https://weak.example.test/policy"]
+      }
+    }
+  },
+
+  "entity": {
+    "evidence": {
+      "organization": null,
+      "about": { "url": null, "present": false, "word_count": 0 },
+      "identity": {
+        "what_sold_stated": false,
+        "location_stated": false,
+        "legal_or_trading_name_stated": true
+      },
+      "contact": {
+        "page_present": false,
+        "email": null,
+        "phone": null,
+        "postal_address": null,
+        "contact_form": true
+      },
+      "consistency": {
+        "name_variants": ["Weak Weaves", "WeakWeaves Exports", "Weak Weaves Pvt Ltd"],
+        "address_variants": [],
+        "phone_variants": []
+      },
+      "same_as": [],
+      "authorship": { "articles_with_author": 0, "author_entities": [] },
+      "policies": { "privacy": false, "terms": false, "returns": true, "shipping": false, "refunds": false },
+      "credentials": [
+        {
+          "claim_text": "Handloom Mark",
+          "source_url": "https://weak.example.test/products/silk-saree-1",
+          "image_only": true,
+          "independently_verified": false
+        }
+      ],
+      "logo_alt": null
+    }
+  },
+
+  "product": {
+    "evidence": {
+      "pages": [
+        {
+          "url": "https://weak.example.test/products/silk-saree-1",
+          "structured_data_present": true,
+          "parse_ok": false,
+          "required_property_errors": ["unparseable json-ld block"],
+          "offer": { "price": null, "price_currency": null, "availability": null },
+          "sku": null,
+          "gtin": null,
+          "mpn": null,
+          "brand": null,
+          "variants": [],
+          "has_variant_selector": true,
+          "attributes": {},
+          "aggregate_rating": null,
+          "review_count": 0,
+          "reviews_visible_on_page": false,
+          "shipping_details": null,
+          "return_policy": null,
+          "breadcrumb_list": false,
+          "category": null,
+          "image_urls": [
+            "https://weak.example.test/i/1.jpg",
+            "https://weak.example.test/i/2.jpg",
+            "https://weak.example.test/i/details-table.jpg"
+          ],
+          "images_with_alt": 0,
+          "image_in_structured_data": false,
+          "price_visible_in_text": true
+        },
+        {
+          "url": "https://weak.example.test/products/silk-saree-2",
+          "structured_data_present": true,
+          "parse_ok": true,
+          "required_property_errors": [],
+          "offer": { "price": null, "price_currency": null, "availability": null },
+          "sku": null,
+          "gtin": null,
+          "mpn": null,
+          "brand": null,
+          "variants": [],
+          "has_variant_selector": true,
+          "attributes": {},
+          "aggregate_rating": 4.9,
+          "review_count": 212,
+          "reviews_visible_on_page": false,
+          "shipping_details": null,
+          "return_policy": null,
+          "breadcrumb_list": false,
+          "category": null,
+          "image_urls": ["https://weak.example.test/i/3.jpg"],
+          "images_with_alt": 0,
+          "image_in_structured_data": false,
+          "price_visible_in_text": true
+        }
+      ]
+    }
+  },
+
+  "ai_discoverability": {
+    "evidence": {
+      "answerability": { "pages_with_lead_answer": 0, "question_headings": [] },
+      "facts": {
+        "facts_in_text": ["what_sold"],
+        "facts_image_only": ["materials", "origin", "care", "dimensions", "returns_terms"]
+      },
+      "faq": { "faq_pages": [], "faqpage_schema_present": false },
+      "entity_clarity": { "brand_statement_present": false, "category_statement_present": false },
+      "schema_types": ["Product"],
+      "relationships": {
+        "breadcrumbs_present": false,
+        "entity_links_present": false,
+        "about_mentions_present": false
+      },
+      "commercial_facts": { "price_in_text": true, "shipping_in_text": false, "returns_in_text": false },
+      "extractability": {
+        "semantic_html_ratio": 0.11,
+        "tabular_data_as_tables": false,
+        "text_in_images_flag": true
+      }
+    }
+  }
+}
