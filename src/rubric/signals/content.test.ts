@@ -211,22 +211,45 @@ describe('CON-05 — informational content hub', () => {
 /* --------------------------------------------------------------- CON-11 --- */
 
 describe('CON-11 — internal content relationships', () => {
-  const article = (links: string[]) => ({ url: 'https://brand.test/journal/a', internal_links: links });
+  // Direction 1 (editorial -> commercial): an editorial article links to a
+  // product/collection URL, OR a product records inbound_editorial_links > 0.
+  // Direction 2 (commercial -> editorial): a commercial crawl page links to an
+  // editorial URL (the hub or an article). The two directions read independent
+  // evidence: content.editorial/products for direction 1, crawl.pages for direction 2.
   const prod = 'https://brand.test/products/p';
   const coll = 'https://brand.test/collections/c';
+  const articleUrl = 'https://brand.test/journal/a';
+  const article = (links: string[]) => ({ url: articleUrl, internal_links: links });
+  /** A commercial crawl page and the links it points at. */
+  const commercialPage = (type: CrawlPage['page_type'], url: string, links: string[]) =>
+    page({ page_type: type, url, internal_links: links });
 
-  it('pass — editorial links to commercial and commercial links back to editorial', () => {
+  it('pass — editorial links to commercial (article) and a commercial page links to editorial', () => {
     const ed = editorial({ hub_present: true, articles: [article([prod])] });
-    const products = [product({ url: prod, inbound_editorial_links: 2 })];
-    const r = con11(ed, products, [collection({ url: coll })], SOUGHT_WITH_EDITORIAL);
+    const products = [product({ url: prod, inbound_editorial_links: 0 })];
+    const pages = [commercialPage('product', prod, [articleUrl])];
+    const r = con11(ed, products, [collection({ url: coll })], pages, SOUGHT_WITH_EDITORIAL);
     strictEqual(r.state, 'pass');
     assertScoredRefs(r);
   });
 
-  it('partial — editorial links to commercial but no commercial page links back', () => {
-    const ed = editorial({ hub_present: true, articles: [article([coll])] });
+  it('partial — editorial -> commercial only (via inbound_editorial_links), no commercial -> editorial', () => {
+    // Direction 1 is carried solely by inbound_editorial_links, proving that field is
+    // still read with its original editorial -> commercial meaning.
+    const ed = editorial({ hub_present: true, articles: [article([])] });
+    const products = [product({ url: prod, inbound_editorial_links: 3 })];
+    const pages = [commercialPage('product', prod, ['https://brand.test/about'])];
+    const r = con11(ed, products, [collection({ url: coll })], pages, SOUGHT_WITH_EDITORIAL);
+    strictEqual(r.state, 'partial');
+    strictEqual(r.itemsSatisfying, 1);
+    assertScoredRefs(r);
+  });
+
+  it('partial — commercial -> editorial only, no editorial -> commercial', () => {
+    const ed = editorial({ hub_present: true, articles: [article(['https://brand.test/about'])] });
     const products = [product({ url: prod, inbound_editorial_links: 0 })];
-    const r = con11(ed, products, [collection({ url: coll })], SOUGHT_WITH_EDITORIAL);
+    const pages = [commercialPage('home', 'https://brand.test/', [articleUrl])];
+    const r = con11(ed, products, [collection({ url: coll })], pages, SOUGHT_WITH_EDITORIAL);
     strictEqual(r.state, 'partial');
     strictEqual(r.itemsSatisfying, 1);
     assertScoredRefs(r);
@@ -235,21 +258,35 @@ describe('CON-11 — internal content relationships', () => {
   it('not_detected — editorial exists but no links run either way', () => {
     const ed = editorial({ hub_present: true, articles: [article(['https://brand.test/about'])] });
     const products = [product({ url: prod, inbound_editorial_links: 0 })];
-    const r = con11(ed, products, [collection({ url: coll })], SOUGHT_WITH_EDITORIAL);
+    const pages = [commercialPage('product', prod, ['https://brand.test/about'])];
+    const r = con11(ed, products, [collection({ url: coll })], pages, SOUGHT_WITH_EDITORIAL);
+    strictEqual(r.state, 'not_detected');
+    assertScoredRefs(r);
+  });
+
+  it('not_detected — only an editorial page links to editorial (editorial pages are not commercial)', () => {
+    // A page of type `editorial` linking to an editorial URL is editorial -> editorial,
+    // not commercial -> editorial, so it must not satisfy direction 2.
+    const ed = editorial({ hub_present: true, articles: [article(['https://brand.test/about'])] });
+    const products = [product({ url: prod, inbound_editorial_links: 0 })];
+    const pages = [commercialPage('editorial', articleUrl, ['https://brand.test/journal'])];
+    const r = con11(ed, products, [collection({ url: coll })], pages, SOUGHT_WITH_EDITORIAL);
     strictEqual(r.state, 'not_detected');
     assertScoredRefs(r);
   });
 
   it('not_applicable — CON-05 not_detected (no editorial to relate)', () => {
     const ed = editorial({ hub_present: false, hub_url: null, articles: [] });
-    const r = con11(ed, [product({ url: prod, inbound_editorial_links: 1 })], [], SOUGHT_WITH_EDITORIAL);
+    const pages = [commercialPage('product', prod, [articleUrl])];
+    const r = con11(ed, [product({ url: prod, inbound_editorial_links: 1 })], [], pages, SOUGHT_WITH_EDITORIAL);
     strictEqual(r.state, 'not_applicable');
     assertScoredRefs(r);
   });
 
   it('not_evaluated — CON-05 not_evaluated (editorial not sought)', () => {
     const ed = editorial({ hub_present: true, articles: [article([prod])] });
-    assertNotEvaluated(con11(ed, [product({ url: prod, inbound_editorial_links: 1 })], [], SOUGHT_WITHOUT_EDITORIAL));
+    const pages = [commercialPage('product', prod, [articleUrl])];
+    assertNotEvaluated(con11(ed, [product({ url: prod, inbound_editorial_links: 1 })], [], pages, SOUGHT_WITHOUT_EDITORIAL));
   });
 });
 

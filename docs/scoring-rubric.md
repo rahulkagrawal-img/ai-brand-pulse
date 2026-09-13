@@ -663,7 +663,7 @@ and v0.1 concealed this by expressing judgement as evidence fields with objectiv
 #### CON-11 — Internal content relationships · **Type A** · Weight **3**
 - **Measures:** whether editorial and commercial content link to each other.
 - **Population:** one item — the site.
-- **Evidence:** `content.editorial.articles[].internal_links[]`, `content.products[].inbound_editorial_links`
+- **Evidence:** *editorial → commercial:* `content.editorial.articles[].internal_links[]` (matched against `content.products[].url` / `content.collections[].url`) and `content.products[].inbound_editorial_links`. *commercial → editorial:* `crawl.pages[].{page_type, internal_links[]}` (matched against `content.editorial.{hub_url, articles[].url}`). Each direction is measured from its own evidence; no field is renamed or reinterpreted.
 - **Item satisfies when:** at least one sampled editorial page links to a product or collection page **and** at least one sampled commercial page links to editorial content.
 - **Violation:** none.
 - **Zero state:** `not_detected`

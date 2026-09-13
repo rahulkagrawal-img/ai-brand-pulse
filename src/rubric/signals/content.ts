@@ -222,21 +222,25 @@ export function con05(editorial: EditorialEvidence, sought: readonly SoughtTarge
  * single-item `partial` outside TEC-03/TEC-13 (§6.5 exception). CON-11 is therefore a
  * TWO-ITEM population — one item per link direction — resolved by the ordinary
  * aggregation rule: both directions present → `pass`, one → `partial`, neither →
- * `not_detected`. The two declared evidence fields map one-to-one onto the two
- * directions, which is the only assignment under which `pass` is reachable:
+ * `not_detected`. Each direction has its OWN, independently observable evidence, so no
+ * existing field is renamed or reinterpreted:
  *   - editorial → commercial: a sampled editorial article links to a product or
  *     collection page (`content.editorial.articles[].internal_links[]` targeting a
- *     product/collection URL);
- *   - commercial → editorial: a sampled product page carries editorial links
- *     (`content.products[].inbound_editorial_links > 0`).
- * The product/collection URL set is taken from `content.products[].url` and
- * `content.collections[].url` — the in-dimension source needed to classify a link
- * target, which the rubric's satisfaction condition inherently requires.
+ *     `content.products[].url` / `content.collections[].url`), OR a sampled product
+ *     records inbound editorial links (`content.products[].inbound_editorial_links > 0`
+ *     — kept with its original "inbound links FROM editorial" meaning);
+ *   - commercial → editorial: a sampled commercial page (a `crawl.pages[]` entry of a
+ *     commercial type other than `editorial`) has an `internal_links[]` target that is
+ *     an editorial URL (`content.editorial.hub_url` or a `content.editorial.articles[].url`).
+ * The commercial → editorial direction reads the already-collected
+ * `crawl.pages[].internal_links[]` rather than any product-side link list, which the
+ * content evidence does not carry; nothing new is fabricated.
  */
 export function con11(
   editorial: EditorialEvidence,
   products: readonly ContentProductEvidence[],
   collections: readonly CollectionEvidence[],
+  pages: readonly CrawlPage[],
   sought: readonly SoughtTarget[],
 ): SignalResult {
   const prereq = editorialHubState(editorial, sought);
@@ -251,16 +255,23 @@ export function con11(
     ...products.map((p) => p.url),
     ...collections.map((c) => c.url),
   ]);
-  const articles = editorial.articles;
-  const editorialToCommercial = (articles ?? []).some((a) => (a.internal_links ?? []).some((l) => productCollectionUrls.has(l)));
-  const commercialToEditorial = products.some((p) => (p.inbound_editorial_links ?? 0) > 0);
+  const editorialUrls = new Set<string>();
+  if (editorial.hub_url != null) editorialUrls.add(editorial.hub_url);
+  for (const a of editorial.articles ?? []) editorialUrls.add(a.url);
+
+  const editorialToCommercial =
+    (editorial.articles ?? []).some((a) => (a.internal_links ?? []).some((l) => productCollectionUrls.has(l))) ||
+    products.some((p) => (p.inbound_editorial_links ?? 0) > 0);
+  const commercialToEditorial = pages.some(
+    (p) => isCommercial(p) && p.page_type !== 'editorial' && p.internal_links.some((l) => editorialUrls.has(l)),
+  );
 
   const items: PopulationItem[] = [
-    { applicable: true, evaluable: articles !== undefined, satisfying: editorialToCommercial },
+    { applicable: true, evaluable: true, satisfying: editorialToCommercial },
     { applicable: true, evaluable: true, satisfying: commercialToEditorial },
   ];
   const agg = aggregateItems(items, { zeroState: 'not_detected' });
-  const refs = [ptr('content', 'evidence', 'editorial'), ptr('content', 'evidence', 'products')];
+  const refs = [ptr('content', 'evidence', 'editorial'), ptr('content', 'evidence', 'products'), ptr('crawl', 'pages')];
 
   let reason: string;
   switch (agg.state) {
