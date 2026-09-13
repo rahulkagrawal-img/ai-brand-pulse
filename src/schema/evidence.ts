@@ -474,6 +474,11 @@ export type Sitemap = z.infer<typeof SitemapSchema>;
 export type ProductPageEvidence = z.infer<typeof ProductPageEvidenceSchema>;
 export type EntityEvidence = z.infer<typeof EntityEvidenceSchema>;
 export type ContentEvidence = z.infer<typeof ContentEvidenceSchema>;
+export type CollectionEvidence = z.infer<typeof CollectionEvidenceSchema>;
+export type ContentProductEvidence = z.infer<typeof ContentProductEvidenceSchema>;
+export type EditorialEvidence = z.infer<typeof EditorialEvidenceSchema>;
+export type IntentCoverage = z.infer<typeof IntentCoverageSchema>;
+export type DuplicationEvidence = z.infer<typeof DuplicationEvidenceSchema>;
 export type AiEvidence = z.infer<typeof AiEvidenceSchema>;
 export type ReviewRecord = z.infer<typeof ReviewRecordSchema>;
 
