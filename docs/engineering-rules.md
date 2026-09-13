@@ -302,7 +302,7 @@ complexity**.
 | O-2 | Test framework | Follows O-1 | The ecosystem default for the chosen language. No custom runner |
 | O-3 | Evidence schema validation mechanism | Depends on O-1; JSON Schema and language-native validators are both viable | Prefer one schema definition that both validates fixtures and generates types, to avoid two drifting sources of truth |
 | O-4 | Storage | Not needed until M5. The Build Plan names a hosted database, but that predates validation | Decide from real operational need, not from the reference architecture |
-| O-5 | `evidence_refs` path syntax | Affects every signal's output shape | JSON Pointer — standardised, unambiguous with array indices, no bespoke parser |
+| O-5 | `evidence_refs` path syntax | Affects every signal's output shape | **Resolved (Phase 3 planning): JSON Pointer (RFC 6901)** — standardised, unambiguous with array indices, no bespoke parser. Contract in `src/rubric/signal.ts` and `audit-spec.md` §7.2/AQ-6 |
 | O-6 | Raw HTML retention | Real trade-off: re-derivation value vs. storage and third-party-content obligations | Retain locally during the concierge phase, outside the repository |
 | O-7 | Signal weight values | Currently judgement, not measurement | Recalibrate after the concierge batch against H2 resonance and discriminating power (`scoring-rubric.md` §19) |
 | O-9 | Whether 16% reviewer-dependent weight is right | Too low understates content quality; too high weakens the determinism claim | Decide from reviewer consistency in the concierge batch (`scoring-rubric.md` SQ-6) |

@@ -97,12 +97,13 @@ export type RawHtmlElement = (typeof L_RAWHTML)[number];
 /**
  * L-AIAGENT is declared by rubric §7 as "a versioned list of named AI and assistant
  * crawler user-agent tokens, maintained as rubric data" — but the rubric does not
- * enumerate its members.
- *
- * AID-08 cannot be implemented until that membership is supplied. This is recorded
- * as an open blocker rather than populated here: inventing the membership would be
+ * enumerate its members. The membership is NOT invented here: doing so would be
  * inventing rubric data, and adding or removing an agent is a version bump (§18).
  *
- * See the Milestone 1 Phase 1 report, blocker B-3.
+ * Phase 3 planning resolved the consequence for AID-08 (rubric AID-08): while this
+ * list is empty, AID-08 has no population to evaluate and returns `not_evaluated`
+ * (not `not_applicable` — the rule still applies to the site; the audit simply lacks
+ * the rubric data to run it). Supplying members is a rubric version bump and the only
+ * way AID-08 becomes scorable.
  */
 export const L_AIAGENT: readonly string[] = [];

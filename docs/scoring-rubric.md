@@ -260,6 +260,15 @@ false for a site audited as ecommerce:
 The score stays honest and the weakness stays visible. Those are not in tension; v0.1 simply
 implemented only the first.
 
+**Milestone 1 scope (resolved in Phase 3 planning).** The guard fires whenever
+`catalogue_detected = false`. In Milestone 1 — the evidence→signals→scores engine — the guard produces
+only its **deterministic effects**: the Product signals resolve to `not_applicable` with the dimension
+unscored and its weight redistributed (effect 1), and `scores.catalogue_detected = false` is recorded
+(effect 3). The **mandatory `critical` finding** (effect 2) and the **headline-adjacency rule** (effect
+4) are produced by the findings/reporting milestone (M3+), not by the M1 scoring engine — findings and
+report assembly live to the right of the scoring boundary (`audit-spec.md` §2). M1 carries the flag and
+the scoring effect; it does not emit findings.
+
 ---
 
 ## 5. Scoring mathematics
@@ -404,6 +413,15 @@ Signals whose population is one item (the origin, the `robots.txt` file, the `Or
 use the same algorithm with `A = E = 1`, which reduces to: violation → `fail`, satisfies → `pass`,
 otherwise → zero state. No special case is needed.
 
+**Exception — signal-local `partial` (resolved in Phase 3 planning).** Two single-item signals, TEC-03
+and TEC-13, declare a legitimate `partial` state that the count arithmetic above cannot produce.
+Each defines a **signal-local classification** — documented in its own definition — that inspects its
+evidence to distinguish a genuine intermediate case (TEC-03: a sitemap retrievable but undeclared or
+malformed; TEC-13: a redirect chain that terminates at the preferred origin over multiple hops) from
+`pass` and from the zero state. The `partial` there comes from that per-signal inspection, not from a
+proportion of items, and it is confined to these two signals; no other single-item signal introduces
+one.
+
 ---
 
 ## 7. Declared lists (versioned with the rubric)
@@ -470,7 +488,7 @@ claims to measure AI commerce visibility.
 - **Violation:** `Disallow: /` applies to `User-agent: *`.
 - **Zero state:** `fail`
 - **States:** `pass` · `partial` · `fail` · `not_evaluated`
-- **Limits:** Rule matching follows the common prefix/wildcard convention; real crawler behaviour on conflicting rules varies by vendor. Covers `User-agent: *` only — **agent-specific directives are scored by AID-08**, which v1 weights equally (§10 of this dimension's rationale is in §19.2). Non-commercial paths (cart, account, search) are excluded from the population, so blocking them is correctly invisible here rather than scored as `partial`.
+- **Limits:** Rule matching follows the common prefix/wildcard convention; real crawler behaviour on conflicting rules varies by vendor. Covers `User-agent: *` only — **agent-specific directives are scored by AID-08**, which v1 weights equally (§10 of this dimension's rationale is in §19.2). Non-commercial paths (cart, account, search) are excluded from the population, so blocking them is correctly invisible here rather than scored as `partial`. `site.key_paths` is **context only** (resolved in Phase 3 planning): it may inform how a finding is phrased, but the population and the items evaluated are the sampled commercial pages, never `key_paths` — an operator-supplied path list must not silently become the scoring denominator.
 
 #### TEC-03 — XML sitemap discoverable · **Type A** · Weight **2**
 - **Measures:** whether a sitemap can be found by a machine without guessing.
@@ -480,7 +498,7 @@ claims to measure AI commerce visibility.
 - **Violation:** none.
 - **Zero state:** `not_detected` — but `not_evaluated` if `sitemap` is absent from `crawl.sought[]` (§4.4).
 - **States:** `pass` · `partial` · `not_detected` · `not_evaluated`
-- **Limits:** `partial` applies when a sitemap is retrievable at a conventional location but undeclared, or declared but malformed. Only locations actually requested are covered; a sitemap at an unconventional, undeclared path is indistinguishable from none — which is precisely the discoverability problem being measured.
+- **Limits:** `partial` applies when a sitemap is retrievable at a conventional location but undeclared, or declared but malformed. This is a **signal-local classification** (resolved in Phase 3 planning, §6.5 exception): as a single-item signal the count arithmetic cannot yield `partial`, so TEC-03 inspects its own evidence to distinguish this intermediate case. Only locations actually requested are covered; a sitemap at an unconventional, undeclared path is indistinguishable from none — which is precisely the discoverability problem being measured.
 
 #### TEC-05 — Sampled pages are indexable · **Type A** · Weight **3**
 - **Measures:** whether pages that should be indexed are permitted to be.
@@ -500,7 +518,7 @@ claims to measure AI commerce visibility.
 - **Violation:** any page with `canonical_count > 1`; **or** any canonical resolving off-host; **or** every sampled page declaring the same canonical when `page_count > 1` and that canonical equals the origin root.
 - **Zero state:** `not_detected`
 - **States:** `pass` · `partial` · `fail` · `not_detected`
-- **Limits:** Cross-domain canonicals may be intentional (syndication); they fire the violation and are reported with evidence attached. **This is a signal where human override is expected** (§14.4). The "all canonicals point at the homepage" violation is the case v0.1 could not resolve deterministically.
+- **Limits:** Cross-domain canonicals may be intentional (syndication); they fire the violation and are reported with evidence attached. **This is a signal where human override is expected** (§14.4). The "all canonicals point at the homepage" violation is the case v0.1 could not resolve deterministically. When a canonical is compared with `site.normalised_origin` for that violation, a **trailing slash is normalised before comparison** (resolved in Phase 3 planning), so `https://brand.test` and `https://brand.test/` are treated as the same origin root; no other normalisation is applied at scoring time (the URL is already normalised per `audit-spec.md` §3).
 
 #### TEC-07 — Title tags present and unique · **Type A** · Weight **2**
 - **Measures:** whether every sampled page carries a distinct, non-empty title.
@@ -519,8 +537,8 @@ claims to measure AI commerce visibility.
 - **Item satisfies when:** the page has exactly one `h1` **and** no heading level in document order skips more than one level below its predecessor.
 - **Violation:** none.
 - **Zero state:** `not_detected`
-- **States:** `pass` · `partial` · `fail` · `not_detected`
-- **Limits:** Structural only. A well-formed heading tree says nothing about whether the content beneath it is useful. `fail` arises only through the zero state when headings exist but no page satisfies; a page with no headings at all contributes as non-satisfying.
+- **States:** `pass` · `partial` · `not_detected`
+- **Limits:** Structural only. A well-formed heading tree says nothing about whether the content beneath it is useful. The zero state is `not_detected` (headings exist but no sampled page satisfies, or a page has no headings at all and so does not satisfy). **`fail` is unreachable for this signal** and is therefore not declared (resolved in Phase 3 planning): TEC-10 defines no violation, and no new violation or `fail` zero-state was invented to make it reachable.
 
 #### TEC-11 — Internal reachability within the sample · **Type A** · Weight **1**
 - **Measures:** whether sampled commercial pages are linked from other sampled pages rather than isolated.
@@ -539,8 +557,8 @@ claims to measure AI commerce visibility.
 - **Item satisfies when:** the page carries at least one structured-data block and every block on it has `parse_ok == true`.
 - **Violation:** none.
 - **Zero state:** `not_detected`
-- **States:** `pass` · `partial` · `fail` · `not_detected`
-- **Limits:** A *syntactic* check — does it parse, and what types are declared. Whether the declared types are correct or complete is ENT-01/02 and PRD-01/03–09. Parseability is not validation against a vocabulary specification; no schema validator is run. This signal measures site-wide emission and is **distinct** from ENT-01 and PRD-01 — see §15.
+- **States:** `pass` · `partial` · `not_detected`
+- **Limits:** A *syntactic* check — does it parse, and what types are declared. Whether the declared types are correct or complete is ENT-01/02 and PRD-01/03–09. Parseability is not validation against a vocabulary specification; no schema validator is run. This signal measures site-wide emission and is **distinct** from ENT-01 and PRD-01 — see §15. **`fail` is unreachable for this signal** and is therefore not declared (resolved in Phase 3 planning): TEC-12 defines no violation and its zero state is `not_detected` (a page with a block that fails to parse does not satisfy, so it lowers the proportion toward `partial` or `not_detected` rather than forcing `fail`); no new violation or `fail` zero-state was invented to make it reachable.
 
 #### TEC-13 — HTTPS and host canonicalisation · **Type A** · Weight **2**
 - **Measures:** whether the site resolves to one secure, consistent origin.
@@ -550,7 +568,7 @@ claims to measure AI commerce visibility.
 - **Violation:** HTTP served with no redirect to HTTPS; **or** `tls_errors` non-empty; **or** two or more host variants return 200.
 - **Zero state:** `fail`
 - **States:** `pass` · `partial` · `fail` · `not_evaluated`
-- **Limits:** Certificate validity is recorded as observed at collection time and is not re-verified at scoring time. `partial` covers multi-hop redirects that do terminate at the preferred origin.
+- **Limits:** Certificate validity is recorded as observed at collection time and is not re-verified at scoring time. `partial` covers multi-hop redirects that do terminate at the preferred origin. This is a **signal-local classification** (resolved in Phase 3 planning, §6.5 exception): as a single-item signal the count arithmetic cannot yield `partial`, so TEC-13 inspects its redirect chain to distinguish this intermediate case from a clean single-hop `pass`.
 
 ### Technical — informational (Type C, not scored)
 
@@ -999,7 +1017,7 @@ Retired: 1. Deferred: 1.
 - **Violation:** the site disallows one or more `L-AIAGENT` members from commercial paths **and** `site.stated_objectives` includes an AI-visibility objective.
 - **Zero state:** `partial` — see Limits.
 - **States:** `pass` · `partial` · `fail` · `not_evaluated`
-- **Limits:** **Weight raised 1 → 3 in v1 — reasoning in §19.2.** This signal has a deliberately unusual zero state. Blocking AI agents can be a legitimate commercial decision, particularly for textile and handicraft brands whose designs are routinely copied, so blocking alone is **never** `fail` — it yields `partial` with an informational finding describing the consequence. It becomes `fail` only when it contradicts an objective the brand itself stated. **The signal records what the site declares; it does not tell the brand to unblock**, and `site.stated_objectives` is a human-supplied fact, never an inference about the business. `not_evaluated` when no `robots.txt` was retrieved.
+- **Limits:** **Weight raised 1 → 3 in v1 — reasoning in §19.2.** This signal has a deliberately unusual zero state. Blocking AI agents can be a legitimate commercial decision, particularly for textile and handicraft brands whose designs are routinely copied, so blocking alone is **never** `fail` — it yields `partial` with an informational finding describing the consequence. It becomes `fail` only when it contradicts an objective the brand itself stated. **The signal records what the site declares; it does not tell the brand to unblock**, and `site.stated_objectives` is a human-supplied fact, never an inference about the business. `not_evaluated` when no `robots.txt` was retrieved. **When `L-AIAGENT` is empty**, the population has no members to evaluate, so AID-08 returns **`not_evaluated`** — not `not_applicable` (the rule still applies to the site; the audit simply lacks the rubric data to run it) and not `pass` (§7; resolved in Phase 3 planning). The list is never invented to create members; supplying members is a rubric version bump (§18).
 
 #### AID-09 — Commercial facts as text · **Type A** · Weight **2**
 - **Measures:** whether the commercial facts a buyer asks about exist as extractable text.

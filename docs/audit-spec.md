@@ -302,6 +302,13 @@ One entry per collected page. This is the largest evidence structure and the sou
 | `raw_html_text_length` | integer \| null | Conditional — required when `render_mode ∈ {raw_html, both}` | Derived | No |
 | `rendered_text_length` | integer \| null | Conditional — required when `render_mode ∈ {rendered, both}` | Derived | No |
 | `body_text_hash` | string \| null | No | Derived — CON-12 | No |
+| `raw_html_contains` | object: `L-RAWHTML` member → boolean (`h1_text`, `body_text`, `primary_commercial_fact`) | Conditional — AID-07's input; collected when `render_mode = both`, otherwise absent (AID-07 → `not_evaluated`) | Derived | No |
+
+`raw_html_contains` records, per `L-RAWHTML` member (`scoring-rubric.md` §7), whether that content
+element survives in the raw HTML response. It is the evidence AID-07 reads
+(`scoring-rubric.md` AID-07); the earlier `..._text_length` fields are retained as collected but are
+not what AID-07 scores. A missing key means the field was not collected (no raw-vs-rendered
+comparison was possible), which AID-07 treats as `not_evaluated`.
 
 `page_type` is the one classification in the crawl layer that is **expected** to need human
 correction, and it changes which signals apply. It is flagged for review accordingly.
@@ -366,7 +373,7 @@ One record per signal defined for that dimension in the rubric.
 | `state` | enum: `pass` · `partial` · `fail` · `not_detected` · `not_applicable` · `not_evaluated` | Yes | Derivation | **Yes — override permitted** |
 | `value` | number \| null | Yes | Derived from `state` | No |
 | `weight` | integer | Yes | Rubric | No |
-| `evidence_refs` | array of evidence paths | Yes | Derivation | No |
+| `evidence_refs` | array of JSON Pointer strings (RFC 6901) into the audit record | Yes | Derivation | No |
 | `reason` | string | Yes | Derivation — which rule branch fired | No |
 | `overridden` | boolean | Yes | Review | — |
 | `original_state` | enum \| null | Conditional — required when `overridden = true` | Review | No |
@@ -385,7 +392,9 @@ already-recorded state sets `overridden = true` (`scoring-rubric.md` §14.4).
 
 **`evidence_refs` is required and must be non-empty for any signal whose state is not
 `not_evaluated`.** A signal that cannot say which evidence produced it is unauditable, and an
-unauditable signal is exactly the thing this product promises it does not ship.
+unauditable signal is exactly the thing this product promises it does not ship. Each ref is a
+**JSON Pointer (RFC 6901)** resolving against the audit record (AQ-6, resolved in Phase 3 planning),
+so an array index is unambiguous and no bespoke path parser is needed.
 
 **Overrides are never silent.** Every override retains `original_state`. The override log is the
 highest-value output of the concierge phase: it is the enumerated list of places where the
@@ -542,4 +551,4 @@ Concierge records must still satisfy: every signal has `evidence_refs`; every fi
 | AQ-3 | Does the Blueprint extend the audit record or is it a separate artefact? | Recommended: **separate artefact referencing `audit_id`**, so free-audit records stay uniform for calibration |
 | AQ-4 | How are multi-locale / multi-currency sites represented? | Undecided. Currently one `locale` per audit, stated in `limitations`. Genuine multi-locale support needs real cases first |
 | AQ-5 | Is raw HTML retained, or only extracted evidence? | Undecided — a real trade-off: retention makes re-derivation possible (valuable while rules are unstable), and creates storage and third-party-content-retention obligations. Recommended for the concierge phase: **retain, locally, outside the repository** |
-| AQ-6 | Does `evidence_refs` use JSON Pointer, dotted paths, or a custom scheme? | Undecided. Recommend **JSON Pointer** — standardised, unambiguous with array indices, and no bespoke parser to maintain |
+| AQ-6 | Does `evidence_refs` use JSON Pointer, dotted paths, or a custom scheme? | **Resolved (Phase 3 planning): JSON Pointer (RFC 6901)** — standardised, unambiguous with array indices, and no bespoke parser to maintain. Recorded in §7.2 and `src/rubric/signal.ts` |
