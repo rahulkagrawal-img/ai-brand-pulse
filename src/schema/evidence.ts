@@ -468,6 +468,9 @@ export const EvidenceRecordSchema = z.object({
 
 export type EvidenceRecord = z.infer<typeof EvidenceRecordSchema>;
 export type CrawlPage = z.infer<typeof CrawlPageSchema>;
+export type RobotsTxt = z.infer<typeof RobotsTxtSchema>;
+export type CrawlOrigin = z.infer<typeof CrawlOriginSchema>;
+export type Sitemap = z.infer<typeof SitemapSchema>;
 export type ProductPageEvidence = z.infer<typeof ProductPageEvidenceSchema>;
 export type EntityEvidence = z.infer<typeof EntityEvidenceSchema>;
 export type ContentEvidence = z.infer<typeof ContentEvidenceSchema>;
