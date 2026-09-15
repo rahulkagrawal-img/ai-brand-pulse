@@ -413,14 +413,15 @@ Signals whose population is one item (the origin, the `robots.txt` file, the `Or
 use the same algorithm with `A = E = 1`, which reduces to: violation → `fail`, satisfies → `pass`,
 otherwise → zero state. No special case is needed.
 
-**Exception — signal-local `partial` (resolved in Phase 3 planning).** Two single-item signals, TEC-03
-and TEC-13, declare a legitimate `partial` state that the count arithmetic above cannot produce.
-Each defines a **signal-local classification** — documented in its own definition — that inspects its
-evidence to distinguish a genuine intermediate case (TEC-03: a sitemap retrievable but undeclared or
-malformed; TEC-13: a redirect chain that terminates at the preferred origin over multiple hops) from
-`pass` and from the zero state. The `partial` there comes from that per-signal inspection, not from a
-proportion of items, and it is confined to these two signals; no other single-item signal introduces
-one.
+**Exception — signal-local `partial`.** Some single-item signals declare a legitimate `partial` state
+that the count arithmetic above cannot produce. Each defines a **signal-local classification** —
+documented in its own definition — that inspects its evidence to distinguish a genuine intermediate
+case from `pass` and from the zero state; the `partial` there comes from that per-signal inspection,
+not from a proportion of items. TEC-03 (a sitemap retrievable but undeclared or malformed), TEC-13 (a
+redirect chain that terminates at the preferred origin over multiple hops) and ENT-07 (external
+profiles present in markup but not declared in `Organization.sameAs`) each declare such a `partial`. A
+single-item signal produces `partial` only where its own definition declares one — never from the
+proportion steps.
 
 ---
 
@@ -662,7 +663,7 @@ and v0.1 concealed this by expressing judgement as evidence fields with objectiv
 
 #### CON-11 — Internal content relationships · **Type A** · Weight **3**
 - **Measures:** whether editorial and commercial content link to each other.
-- **Population:** one item — the site.
+- **Population:** two items, one per link direction — editorial→commercial and commercial→editorial.
 - **Evidence:** *editorial → commercial:* `content.editorial.articles[].internal_links[]` (matched against `content.products[].url` / `content.collections[].url`) and `content.products[].inbound_editorial_links`. *commercial → editorial:* `crawl.pages[].{page_type, internal_links[]}` (matched against `content.editorial.{hub_url, articles[].url}`). Each direction is measured from its own evidence; no field is renamed or reinterpreted.
 - **Item satisfies when:** at least one sampled editorial page links to a product or collection page **and** at least one sampled commercial page links to editorial content.
 - **Violation:** none.

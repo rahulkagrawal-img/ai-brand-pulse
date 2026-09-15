@@ -6,8 +6,11 @@
  * `scoring-rubric.md` §11, never recorded from the engine (tests/README §4). Each test
  * uses a minimal evidence object built from the factories below.
  *
- * ENT-06 is intentionally absent — its evidence-combination rule is ambiguous and
- * awaits a ruling (see entity.ts header and the report).
+ * ENT-06 is exercised for every reachable state (pass · partial · fail · not_evaluated —
+ * it declares no other) and every boundary its locked ruling turns on: the ≥2-occurrence
+ * evaluability gate, an occurrence being a source value rather than a deduplicated entry,
+ * logo_alt vs Organization.name, the case/punctuation/whitespace normalisation, and the
+ * exclusion of crawl.pages[].title as a name source.
  *
  * Type B signals (ENT-04, ENT-10) are additionally exercised for the §2 contract: with
  * no reviewer record they are `not_evaluated`, never zero and never guessed.
@@ -18,7 +21,7 @@ import { describe, it } from 'node:test';
 
 import type { CrawlPage, EntityEvidence, ReviewRecord, SoughtTarget } from '../../schema/evidence.ts';
 import type { SignalResult } from '../signal.ts';
-import { ent01, ent02, ent03, ent04, ent05, ent07, ent09, ent10 } from './entity.ts';
+import { ent01, ent02, ent03, ent04, ent05, ent06, ent07, ent09, ent10 } from './entity.ts';
 
 /* ----------------------------------------------------------- factories --- */
 
@@ -63,6 +66,10 @@ function identity(overrides: Partial<EntityEvidence['identity']>): EntityEvidenc
 
 function contact(overrides: Partial<EntityEvidence['contact']>): EntityEvidence['contact'] {
   return { page_present: false, email: null, phone: null, postal_address: null, contact_form: false, ...overrides };
+}
+
+function consistency(overrides: Partial<EntityEvidence['consistency']> = {}): EntityEvidence['consistency'] {
+  return { name_variants: [], address_variants: [], phone_variants: [], ...overrides };
 }
 
 function policies(overrides: Partial<EntityEvidence['policies']>): EntityEvidence['policies'] {
@@ -240,6 +247,199 @@ describe('ENT-05 — contact information completeness', () => {
 
   it('not_evaluated — contact was not sought (§4.4)', () => {
     assertNotEvaluated(ent05(contact({ email: 'a@brand.test' }), SOUGHT_NONE));
+  });
+});
+
+/* --------------------------------------------------------------- ENT-06 --- */
+
+describe('ENT-06 — identity consistency across the site', () => {
+  const org = (name: string | null) => organization({ name });
+
+  describe('not_evaluated — no component has ≥2 comparable occurrences', () => {
+    it('every source empty or absent', () => {
+      assertNotEvaluated(ent06(consistency(), null, null));
+    });
+
+    it('a single name variant, nothing else — boundary at exactly one occurrence', () => {
+      assertNotEvaluated(ent06(consistency({ name_variants: ['Solo Brand'] }), null, null));
+    });
+
+    it('one name variant plus an organization whose name is null is still one occurrence', () => {
+      assertNotEvaluated(ent06(consistency({ name_variants: ['Solo Brand'] }), null, org(null)));
+    });
+
+    it('empty-string variants are not occurrences', () => {
+      assertNotEvaluated(ent06(consistency({ name_variants: ['', '   '] }), null, null));
+      // '' + one real value = one comparable occurrence, still not evaluable.
+      assertNotEvaluated(ent06(consistency({ name_variants: ['', 'Acme'] }), null, null));
+    });
+  });
+
+  describe('pass — every evaluable component is internally consistent', () => {
+    it('name_variants(1) + Organization.name(1) agree (an occurrence is a source value, not a deduped entry)', () => {
+      const r = ent06(consistency({ name_variants: ['Strong Looms'] }), null, org('Strong Looms'));
+      strictEqual(r.state, 'pass');
+      strictEqual(r.itemsEvaluated, 1);
+      strictEqual(r.itemsSatisfying, 1);
+      assertScoredRefs(r);
+    });
+
+    it('duplicate raw variants that agree count as two occurrences and satisfy', () => {
+      const r = ent06(consistency({ name_variants: ['Acme', 'Acme'] }), null, null);
+      strictEqual(r.state, 'pass');
+      strictEqual(r.itemsEvaluated, 1);
+    });
+
+    it('all four components evaluable and consistent', () => {
+      const r = ent06(
+        consistency({
+          name_variants: ['Acme', 'ACME'],
+          address_variants: ['1 Example Road', '1 example road'],
+          phone_variants: ['12345', '12345'],
+        }),
+        'Acme',
+        org('Acme'),
+      );
+      strictEqual(r.state, 'pass');
+      strictEqual(r.itemsApplicable, 4);
+      strictEqual(r.itemsEvaluated, 4);
+      strictEqual(r.itemsSatisfying, 4);
+    });
+  });
+
+  describe('partial — some but not all evaluable components consistent', () => {
+    it('name inconsistent, address consistent — the legal-vs-trading-name case', () => {
+      const r = ent06(
+        consistency({
+          name_variants: ['Acme', 'Acme Textiles Pvt Ltd'],
+          address_variants: ['1 Example Road', '1 Example Road'],
+        }),
+        null,
+        null,
+      );
+      strictEqual(r.state, 'partial');
+      strictEqual(r.itemsEvaluated, 2);
+      strictEqual(r.itemsSatisfying, 1);
+      assertScoredRefs(r);
+    });
+
+    it('three components consistent, the logo alt inconsistent', () => {
+      const r = ent06(
+        consistency({ name_variants: ['Acme', 'Acme'], address_variants: ['1 Road', '1 Road'], phone_variants: ['12345', '12345'] }),
+        'A Different Alt',
+        org('Acme'),
+      );
+      strictEqual(r.state, 'partial');
+      strictEqual(r.itemsSatisfying, 3);
+    });
+  });
+
+  describe('fail — evaluable components exist, none consistent; zero state is fail', () => {
+    it('a single evaluable component that disagrees', () => {
+      const r = ent06(consistency({ name_variants: ['Weak Weaves', 'WeakWeaves Exports', 'Weak Weaves Pvt Ltd'] }), null, null);
+      strictEqual(r.state, 'fail');
+      strictEqual(r.itemsEvaluated, 1);
+      strictEqual(r.itemsSatisfying, 0);
+      assertScoredRefs(r);
+    });
+
+    it('every evaluable component disagrees', () => {
+      const r = ent06(consistency({ name_variants: ['Acme', 'Beta'], address_variants: ['1 Road', '2 Lane'] }), null, null);
+      strictEqual(r.state, 'fail');
+    });
+  });
+
+  describe('ruling: logo_alt is compared against normalised Organization.name', () => {
+    it('logo_alt and Organization.name agree → the logo component satisfies (pass)', () => {
+      strictEqual(ent06(consistency(), 'Acme', org('Acme')).state, 'pass');
+    });
+
+    it('logo_alt and Organization.name disagree → fail', () => {
+      strictEqual(ent06(consistency(), 'Acme', org('Beta Corp')).state, 'fail');
+    });
+
+    it('only one of the two present → the logo component is not evaluable', () => {
+      // logo_alt present, no organization: nothing to compare it against. The name
+      // component (two agreeing variants) still carries the signal to pass.
+      const r = ent06(consistency({ name_variants: ['Acme', 'Acme'] }), 'Acme', null);
+      strictEqual(r.state, 'pass');
+      strictEqual(r.itemsEvaluated, 1); // name only; logo not evaluable
+    });
+
+    it('an empty logo_alt is an absent source, not an occurrence', () => {
+      // logo_alt '' is dropped, so the logo component has only Organization.name —
+      // one comparable occurrence → not evaluable. With no name variants either, the
+      // name component holds only Organization.name (one occurrence), so nothing is
+      // evaluable → not_evaluated.
+      assertNotEvaluated(ent06(consistency(), '', org('Acme')));
+    });
+  });
+
+  describe('ruling: normalisation is case-, punctuation-insensitive, whitespace-collapsed', () => {
+    it('case, punctuation and whitespace differences are consistent', () => {
+      strictEqual(ent06(consistency({ name_variants: ['Acme, Inc.', 'ACME   INC'] }), null, null).state, 'pass');
+    });
+
+    it('a genuinely different spelling is inconsistent', () => {
+      strictEqual(ent06(consistency({ name_variants: ['Acme', 'Acme Textiles'] }), null, null).state, 'fail');
+    });
+
+    it('a symbol such as + is preserved, so it can distinguish two phone forms', () => {
+      // '+91 22 1234' keeps its '+'; '0091 22 1234' has none → two distinct variants.
+      strictEqual(ent06(consistency({ phone_variants: ['+91 22 1234', '0091 22 1234'] }), null, null).state, 'fail');
+    });
+  });
+
+  describe('ruling: crawl.pages[].title is never a name source', () => {
+    it('the signal reads no pages, so evidence_refs carry no crawl/title pointer', () => {
+      const r = ent06(consistency({ name_variants: ['Acme', 'Acme'] }), 'Acme', org('Acme'));
+      ok(!r.evidenceRefs.some((ref) => ref.includes('crawl') || ref.includes('title')));
+    });
+  });
+
+  describe('evidence_refs and item counts', () => {
+    it('cites every inspected field, in fixed order, when an organization is present', () => {
+      const r = ent06(consistency({ name_variants: ['Acme', 'Acme'] }), 'Acme', org('Acme'));
+      deepStrictEqual([...r.evidenceRefs], [
+        '/entity/evidence/consistency/name_variants',
+        '/entity/evidence/consistency/address_variants',
+        '/entity/evidence/consistency/phone_variants',
+        '/entity/evidence/logo_alt',
+        '/entity/evidence/organization/name',
+      ]);
+    });
+
+    it('omits the Organization.name pointer when no organization is present', () => {
+      const r = ent06(consistency({ name_variants: ['Acme', 'Acme'] }), null, null);
+      deepStrictEqual([...r.evidenceRefs], [
+        '/entity/evidence/consistency/name_variants',
+        '/entity/evidence/consistency/address_variants',
+        '/entity/evidence/consistency/phone_variants',
+        '/entity/evidence/logo_alt',
+      ]);
+    });
+
+    it('items_applicable is always four; items_evaluated counts evaluable components', () => {
+      const r = ent06(
+        consistency({ name_variants: ['Acme', 'Acme'], address_variants: ['1 Road', '2 Lane'], phone_variants: ['12345'] }),
+        null,
+        null,
+      );
+      strictEqual(r.itemsApplicable, 4);
+      strictEqual(r.itemsEvaluated, 2); // name + address; phone(1) and logo(0) not evaluable
+      strictEqual(r.state, 'partial'); // name consistent, address not
+    });
+  });
+
+  describe('determinism', () => {
+    it('the same input scores identically twice', () => {
+      const args = () => ent06(
+        consistency({ name_variants: ['Acme', 'ACME'], address_variants: ['1 Road', '1 Road'] }),
+        'Acme',
+        org('Acme'),
+      );
+      deepStrictEqual(args(), args());
+    });
   });
 });
 

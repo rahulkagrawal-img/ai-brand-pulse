@@ -4,12 +4,14 @@
  * Seven Type A (deterministic): ENT-01, ENT-02, ENT-03, ENT-05, ENT-06, ENT-07, ENT-09.
  * Two Type B (reviewer-assessed): ENT-04, ENT-10.
  *
- * **ENT-06 is deliberately NOT implemented in this module.** Its source-combination
- * rule (how `crawl.pages[].title`, `Organization.name`, the `entity.consistency.*`
- * variant lists and the single-valued `entity.logo_alt` component combine, and what an
- * "occurrence to compare" is for the deduplicated variant lists) is genuinely ambiguous
- * and materially changes the result. Per the task's instruction to stop and report
- * rather than guess, ENT-06 awaits a ruling; see the accompanying report.
+ * **ENT-06 implements the locked ruling** that resolved its earlier deferral. Its
+ * name sources are `entity.consistency.name_variants[]` + `Organization.name` only —
+ * `crawl.pages[].title` is provenance/context and is never read for a brand name. An
+ * occurrence is a value FROM a declared source, counted before deduplication (so a
+ * single-entry variant list plus `Organization.name` is two comparable occurrences,
+ * not one); `logo_alt` is compared against the normalised `Organization.name`; a
+ * component with fewer than two comparable occurrences is not evaluable; and the four
+ * components aggregate through the §6.2 primitive with zero state `fail`. See ent06.
  *
  * Each function is a PURE derivation: evidence in, `SignalResult` out (audit-spec §7.2,
  * Phase 3 planning D-1). No network, no clock, no LLM, no dependency beyond the §6
@@ -237,6 +239,116 @@ export function ent05(contact: EntityContact, sought: readonly SoughtTarget[]): 
   );
 }
 
+/* --------------------------------------------------------------- ENT-06 --- */
+
+type EntityConsistency = EntityEvidence['consistency'];
+
+/**
+ * Normalise a value for ENT-06's identity comparison, exactly as the signal's
+ * "item satisfies when" specifies (rubric §11): case- and punctuation-insensitive,
+ * whitespace-collapsed. The identical transform is applied to every component.
+ *
+ *   1. case        → `toLowerCase` (locale-independent; the scoring path takes no
+ *                    locale input, engineering-rules §3).
+ *   2. punctuation → Unicode punctuation `\p{P}` removed. ONLY punctuation: a symbol
+ *                    such as '+' (`\p{S}`) is left in place, because the rubric says
+ *                    "punctuation" and widening it to symbols would invent a rule.
+ *   3. whitespace  → runs collapse to one space, then trimmed.
+ *
+ * Punctuation is removed, not turned into a space: "Acme-Co" normalises to "acmeco",
+ * not "acme co". A value that is empty afterwards carries nothing to compare and is
+ * dropped by {@link identityOccurrences}.
+ */
+function normaliseIdentity(value: string): string {
+  return value.toLowerCase().replace(/\p{P}/gu, '').replace(/\s+/gu, ' ').trim();
+}
+
+/**
+ * The comparable occurrences a component's declared sources contribute. Per the
+ * ruling, an occurrence is a value FROM a declared source, not a distinct entry in a
+ * deduplicated variant list: each element is one occurrence and the list is not
+ * pre-deduplicated, so two identical raw entries are two agreeing occurrences (a
+ * consistent component), not one lone value with nothing to compare. A value that
+ * normalises to empty is an absent source, not an occurrence.
+ */
+function identityOccurrences(rawValues: readonly (string | null | undefined)[]): string[] {
+  const out: string[] = [];
+  for (const raw of rawValues) {
+    if (raw == null) continue;
+    const normalised = normaliseIdentity(raw);
+    if (normalised.length > 0) out.push(normalised);
+  }
+  return out;
+}
+
+/**
+ * One ENT-06 component as a §6.1 population item. Evaluable only with ≥2 comparable
+ * occurrences (fewer means nothing to compare → the component drops out of E);
+ * satisfies when those occurrences reduce to exactly one normalised variant.
+ */
+function consistencyComponent(occurrences: readonly string[]): PopulationItem {
+  const evaluable = occurrences.length >= 2;
+  return { applicable: true, evaluable, satisfying: evaluable && new Set(occurrences).size === 1 };
+}
+
+/**
+ * ENT-06 — Identity consistency across the site (§11). Population: four declared
+ * components — brand name, postal address, phone, logo alt text — aggregated through
+ * the §6.2 primitive with no violation and zero state `fail`. A component satisfies
+ * when its comparable occurrences reduce to exactly one normalised variant; a
+ * component with fewer than two comparable occurrences is not evaluable, so a signal
+ * in which no component is evaluable is `not_evaluated`. States: `pass` · `partial` ·
+ * `fail` · `not_evaluated`.
+ *
+ * Sources per the locked ruling:
+ *   - name:     `consistency.name_variants[]` + `Organization.name`. `crawl.pages[].title`
+ *               is provenance/context only and is deliberately NOT read for a name.
+ *   - address:  `consistency.address_variants[]`.
+ *   - phone:    `consistency.phone_variants[]`.
+ *   - logo alt: `entity.logo_alt` compared against the normalised `Organization.name`.
+ *
+ * **On-site consistency only** — no directory or third-party source is consulted, and
+ * consistency across the wider web must never be claimed.
+ */
+export function ent06(
+  consistency: EntityConsistency,
+  logoAlt: string | null,
+  organization: Organization,
+): SignalResult {
+  const orgName: string | null = organization?.name ?? null;
+
+  const items: PopulationItem[] = [
+    consistencyComponent(identityOccurrences([...consistency.name_variants, orgName])),
+    consistencyComponent(identityOccurrences(consistency.address_variants)),
+    consistencyComponent(identityOccurrences(consistency.phone_variants)),
+    consistencyComponent(identityOccurrences([logoAlt, orgName])),
+  ];
+
+  const agg = aggregateItems(items, { zeroState: 'fail' });
+  if (agg.state === 'not_evaluated') {
+    return notEvaluated('no identity component has two comparable occurrences; on-site consistency was not assessed');
+  }
+
+  const refs = [
+    ptr('entity', 'evidence', 'consistency', 'name_variants'),
+    ptr('entity', 'evidence', 'consistency', 'address_variants'),
+    ptr('entity', 'evidence', 'consistency', 'phone_variants'),
+    ptr('entity', 'evidence', 'logo_alt'),
+    ...(organization != null ? [ptr('entity', 'evidence', 'organization', 'name')] : []),
+  ];
+  return scored(
+    agg,
+    refs,
+    reasonFor(
+      agg,
+      'evaluable identity components are internally consistent',
+      'brand name, address, phone and logo alt text are each internally consistent across their sources',
+      'no evaluable identity component is internally consistent',
+      'no evaluable identity component is internally consistent',
+    ),
+  );
+}
+
 /* --------------------------------------------------------------- ENT-07 --- */
 
 /**
@@ -248,9 +360,8 @@ export function ent05(contact: EntityContact, sought: readonly SoughtTarget[]): 
  *
  * The `partial` here is a signal-local classification of a single item, structurally the
  * same as TEC-03's: declared → `pass`, only-in-markup → `partial`, neither →
- * `not_detected`. (§6.5's "confined to TEC-03/TEC-13" appears to overlook ENT-07 and
- * CON-11; noted in the report. It is not an implementation ambiguity — ENT-07's three
- * states and their conditions are fully specified here.)
+ * `not_detected`. §6.5 now documents this signal-local `partial` alongside TEC-03 and
+ * TEC-13; ENT-07's three states and their conditions are fully specified here.
  */
 export function ent07(sameAs: readonly string[], socialLinksInMarkup: readonly string[] | undefined): SignalResult {
   const refs = [ptr('entity', 'evidence', 'same_as'), ptr('entity', 'evidence', 'social_links_in_markup')];
