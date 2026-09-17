@@ -245,22 +245,24 @@ type EntityConsistency = EntityEvidence['consistency'];
 
 /**
  * Normalise a value for ENT-06's identity comparison, exactly as the signal's
- * "item satisfies when" specifies (rubric §11): case- and punctuation-insensitive,
- * whitespace-collapsed. The identical transform is applied to every component.
+ * locked "item satisfies when" specifies (rubric §11). The identical transform is
+ * applied to every component, in this order:
  *
  *   1. case        → `toLowerCase` (locale-independent; the scoring path takes no
  *                    locale input, engineering-rules §3).
- *   2. punctuation → Unicode punctuation `\p{P}` removed. ONLY punctuation: a symbol
- *                    such as '+' (`\p{S}`) is left in place, because the rubric says
- *                    "punctuation" and widening it to symbols would invent a rule.
- *   3. whitespace  → runs collapse to one space, then trimmed.
+ *   2. punctuation → every Unicode punctuation character (`\p{P}`) is replaced with a
+ *                    single space — a *separator*, not deleted. ONLY punctuation: a
+ *                    symbol such as '+' (`\p{S}`) is left in place, because the rubric
+ *                    says "punctuation" and widening it to symbols would invent a rule.
+ *   3. whitespace  → runs collapse to one space.
+ *   4. trim        → leading/trailing whitespace removed.
  *
- * Punctuation is removed, not turned into a space: "Acme-Co" normalises to "acmeco",
- * not "acme co". A value that is empty afterwards carries nothing to compare and is
- * dropped by {@link identityOccurrences}.
+ * Punctuation is turned into a space, not removed: "Acme-Co" normalises to "acme co",
+ * so "Sacred-Weaves" and "Sacred Weaves" compare equal. A value that is empty
+ * afterwards carries nothing to compare and is dropped by {@link identityOccurrences}.
  */
 function normaliseIdentity(value: string): string {
-  return value.toLowerCase().replace(/\p{P}/gu, '').replace(/\s+/gu, ' ').trim();
+  return value.toLowerCase().replace(/\p{P}/gu, ' ').replace(/\s+/gu, ' ').trim();
 }
 
 /**

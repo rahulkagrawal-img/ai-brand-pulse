@@ -375,9 +375,35 @@ describe('ENT-06 — identity consistency across the site', () => {
     });
   });
 
-  describe('ruling: normalisation is case-, punctuation-insensitive, whitespace-collapsed', () => {
+  describe('ruling: normalisation lower-cases, replaces punctuation with a space, collapses whitespace, trims', () => {
     it('case, punctuation and whitespace differences are consistent', () => {
       strictEqual(ent06(consistency({ name_variants: ['Acme, Inc.', 'ACME   INC'] }), null, null).state, 'pass');
+    });
+
+    it('hyphen vs space normalise identically — "Sacred-Weaves" == "Sacred Weaves" (locked)', () => {
+      // The discriminating case: punctuation is a SEPARATOR, not deleted. Under the old
+      // delete rule these were "sacredweaves" vs "sacred weaves" → fail; now both are
+      // "sacred weaves" → the name component is consistent → pass.
+      strictEqual(ent06(consistency({ name_variants: ['Sacred-Weaves', 'Sacred Weaves'] }), null, null).state, 'pass');
+    });
+
+    it('any punctuation acts as a separator, not a deletion', () => {
+      // "A.B.C", "A/B/C" and "A B C" all normalise to "a b c". Deleting punctuation
+      // would collapse the first two to "abc" and wrongly flag them inconsistent.
+      strictEqual(ent06(consistency({ name_variants: ['A.B.C', 'A/B/C', 'A B C'] }), null, null).state, 'pass');
+    });
+
+    it('logo_alt "Sacred-Weaves" matches Organization.name "Sacred Weaves"', () => {
+      strictEqual(ent06(consistency(), 'Sacred-Weaves', org('Sacred Weaves')).state, 'pass');
+    });
+
+    it('leading/trailing whitespace and surrounding punctuation are trimmed away', () => {
+      strictEqual(ent06(consistency({ name_variants: ['  Acme!  ', '"Acme"'] }), null, null).state, 'pass');
+    });
+
+    it('punctuation-as-separator does not merge distinct tokens', () => {
+      // "A-B" → "a b" (two tokens), not "ab"; it must NOT equal "AB" → "ab".
+      strictEqual(ent06(consistency({ name_variants: ['A-B', 'AB'] }), null, null).state, 'fail');
     });
 
     it('a genuinely different spelling is inconsistent', () => {
@@ -385,6 +411,7 @@ describe('ENT-06 — identity consistency across the site', () => {
     });
 
     it('a symbol such as + is preserved, so it can distinguish two phone forms', () => {
+      // '+' is a symbol (\p{S}), not punctuation (\p{P}); it survives normalisation.
       // '+91 22 1234' keeps its '+'; '0091 22 1234' has none → two distinct variants.
       strictEqual(ent06(consistency({ phone_variants: ['+91 22 1234', '0091 22 1234'] }), null, null).state, 'fail');
     });

@@ -756,7 +756,7 @@ Retired: 1.
 - **Measures:** whether the brand name, address, phone and logo alt text agree wherever they appear on the site.
 - **Population:** four declared components — brand name, postal address, phone, logo alt text.
 - **Evidence:** `entity.consistency.{name_variants[], address_variants[], phone_variants[]}`, `entity.logo_alt`, `crawl.pages[].title`, `Organization.name`
-- **Item satisfies when:** the component has exactly one normalised variant across all sources where it appears (case- and punctuation-insensitive, whitespace-collapsed).
+- **Item satisfies when:** the component has exactly one normalised variant across all sources where it appears. **Normalisation (locked):** apply these steps in order — (1) **case** — lower-case the value; (2) **punctuation** — replace every Unicode punctuation character (Unicode General Category `P`) with a single space; punctuation is a *separator*, not deleted, so `Sacred-Weaves` and `Sacred Weaves` both normalise to `sacred weaves`; (3) **whitespace** — collapse every run of whitespace to a single space; (4) **trim** — remove leading and trailing whitespace. Non-punctuation symbols (e.g. `+`) are preserved, so `+91…` and `0091…` remain distinct. Two variants are the same iff their normalised forms are byte-identical.
 - **Violation:** none.
 - **Zero state:** `fail`
 - **States:** `pass` · `partial` · `fail` · `not_evaluated`
